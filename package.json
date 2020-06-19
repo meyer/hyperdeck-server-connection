@@ -4,9 +4,21 @@
 	"description": "Typescript Node.js library for emulating a Blackmagic Hyperdeck",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
-	"module": "dist/module/index.js",
+	"module": "dist/hyperdeck-server-connection.esm.js",
 	"browser": "dist/browser/index.js",
 	"license": "MIT",
+	"engines": {
+		"node": ">=7.5.0"
+	},
+	"keywords": [
+		"blackmagic",
+		"bmd",
+		"hyperdeck",
+		"video",
+		"typescript",
+		"javascript",
+		"open source"
+	],
 	"contributors": [
 		{
 			"name": "Balte de Wit",
@@ -15,15 +27,29 @@
 		}
 	],
 	"files": [
-		"dist"
+		"dist",
+		"src"
 	],
+	"husky": {
+		"hooks": {
+			"pre-commit": "tsdx lint"
+		}
+	},
+	"standard-version": {
+		"message": "chore(release): %s [skip ci]",
+		"tagPrefix": "",
+		"scripts": {
+			"postchangelog": "prettier --write CHANGELOG.md"
+		}
+	},
 	"scripts": {
-		"build": "trash dist && yarn build:main",
-		"build:main": "tsc",
-		"lint": "eslint .",
-		"lint:fix": "yarn lint --fix",
+		"start": "tsdx watch",
+		"build": "tsdx build",
+		"lint": "eslint src",
+		"lint:fix": "eslint --fix",
 		"unit": "jest",
-		"test": "yarn lint && jest test --rootDir ./src",
+		"test": "tsdx test",
+		"prepare": "tsdx build",
 		"test:coverage": "yarn test -- --coverage",
 		"cov": "jest --coverage; open-cli coverage/lcov-report/index.html",
 		"cov-open": "open-cli coverage/lcov-report/index.html",
@@ -36,10 +62,10 @@
 		"license-validate": "node-license-validator -p -d --allow-licenses MIT BSD BSD-3-Clause BSD-2-Clause ISC Apache Apache-2.0 WTFPL Unlicense --allow-packages cycle"
 	},
 	"scripts-info": {
+		"start": "Run tsdx in watch mode",
 		"info": "Display information about the scripts",
-		"build": "(Trash and re)build the library",
-		"build:main": "Builds main build command without trash.",
-		"lint": "Lint all typescript source files",
+		"build": "Build the library",
+		"lint": "Lint the project",
 		"unit": "Build the library and run unit tests",
 		"test": "Lint, build, and test the library",
 		"test:integration": "Integration tests. Work in progress",
@@ -58,9 +84,6 @@
 		"ci": "Test script for running by the CI (CircleCI)",
 		"validate:dependencies": "Scan dependencies for vulnerabilities and check licenses",
 		"license-validate": "Validate licenses for dependencies."
-	},
-	"engines": {
-		"node": ">=7.5.0"
 	},
 	"devDependencies": {
 		"@types/jest": "^25.2.1",
@@ -83,22 +106,8 @@
 		"standard-version": "^8.0.0",
 		"trash-cli": "^3.0.0",
 		"ts-jest": "^25.3.1",
+		"tsdx": "^0.13.2",
+		"tslib": "^2.0.0",
 		"typescript": "^3.8.3"
-	},
-	"keywords": [
-		"blackmagic",
-		"bmd",
-		"hyperdeck",
-		"video",
-		"typescript",
-		"javascript",
-		"open source"
-	],
-	"standard-version": {
-		"message": "chore(release): %s [skip ci]",
-		"tagPrefix": "",
-		"scripts": {
-			"postchangelog": "prettier --write CHANGELOG.md"
-		}
 	}
 }

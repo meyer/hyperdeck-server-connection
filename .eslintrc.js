@@ -24,11 +24,12 @@ module.exports = {
 			],
 			rules: {
 				'no-use-before-define': 'off',
-				'@typescript-eslint/no-use-before-define': 'off'
+				'@typescript-eslint/no-use-before-define': 'off',
+				'@typescript-eslint/explicit-function-return-type': 'off'
 			}
 		},
 		{
-			files: ['src/**/__tests__/*.test.ts'],
+			files: ['src/**/__tests__/*.spec.ts'],
 			parserOptions: { project: './tsconfig.jest.json' },
 			env: {
 				jest: true
