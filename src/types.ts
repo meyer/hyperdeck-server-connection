@@ -10,33 +10,37 @@ export interface Hash<T> {
 	[key: string]: T
 }
 
-export interface NotififcationConfig {
+export interface NotificationConfig {
 	transport: boolean
 	remote: boolean
 	slot: boolean
 	configuration: boolean
 }
 
-export class TResponse {
-	public code: ResponseCode
-	public name: string
-	public params: Hash<string>
+/** @deprecated Misspelt, use `NotificationConfig` instead */
+export type NotififcationConfig = NotificationConfig
 
-	constructor(code: ResponseCode, name: string, params?: Hash<string>) {
-		this.code = code
-		this.name = name
-		if (params) this.params = params
+export interface Buildable {
+	build(): string
+}
+
+export class TResponse<P extends Record<string, any> = {}> implements Buildable {
+	constructor(public code: ResponseCode, public params?: P) {
+		this.name = responseNamesByCode[code]
 	}
+
+	public name: string
 
 	public build(): string {
 		let data = util.format('%d %s', this.code, this.name)
 
 		if (this.params) {
 			data += ':' + CRLF
-			for (const key in this.params) {
-				if (this.params[key]) {
-					data += util.format('%s: %s', key, this.params[key]) + CRLF
+			for (const [key, value] of Object.entries(this.params)) {
+				if (!value) {
+					continue
 				}
+				data += util.format('%s: %s', key, value) + CRLF
 			}
 		}
 
@@ -44,6 +48,12 @@ export class TResponse {
 
 		return data
 	}
+}
+
+export class ErrorResponse implements Buildable {
+	constructor(public code: ResponseCode, public message: string) {}
+
+	public build = (): string => util.format('%d %s', this.code, this.message)
 }
 
 export interface DeserializedCommand {
@@ -132,6 +142,44 @@ export enum CommandNames {
 	IdentifyCommand = 'identify',
 	WatchdogCommand = 'watchdog',
 	PingCommand = 'ping'
+}
+
+export const responseNamesByCode: Record<ResponseCode, string> = {
+	[AsynchronousCode.ConfigurationInfo]: 'configuration info',
+	[AsynchronousCode.ConnectionInfo]: 'connection info',
+	[AsynchronousCode.RemoteInfo]: 'remote info',
+	[AsynchronousCode.SlotInfo]: CommandNames.SlotInfoCommand,
+	[AsynchronousCode.TransportInfo]: CommandNames.TransportInfoCommand,
+	[ErrorCode.ConnectionRejected]: 'connection rejected',
+	[ErrorCode.DiskError]: 'disk error',
+	[ErrorCode.DiskFull]: 'disk full',
+	[ErrorCode.FormatNotPrepared]: 'format not prepared',
+	[ErrorCode.InternalError]: 'internal error',
+	[ErrorCode.InvalidCodec]: 'invalid codec',
+	[ErrorCode.InvalidFormat]: 'invalid format',
+	[ErrorCode.InvalidState]: 'invalid state',
+	[ErrorCode.InvalidToken]: 'invalid token',
+	[ErrorCode.InvalidValue]: 'invalid value',
+	[ErrorCode.NoDisk]: 'no disk',
+	[ErrorCode.NoInput]: 'no input',
+	[ErrorCode.OutOfRange]: 'out of range',
+	[ErrorCode.RemoteControlDisabled]: 'remote control disabled',
+	[ErrorCode.SyntaxError]: 'syntax error',
+	[ErrorCode.TimelineEmpty]: 'timeline empty',
+	[ErrorCode.Unsupported]: 'unsupported',
+	[ErrorCode.UnsupportedParameter]: 'unsupported parameter',
+	[SynchronousCode.ClipsCount]: CommandNames.ClipsCountCommand,
+	[SynchronousCode.ClipsInfo]: 'clips info',
+	[SynchronousCode.Configuration]: CommandNames.ConfigurationCommand,
+	[SynchronousCode.DeviceInfo]: CommandNames.DeviceInfoCommand,
+	[SynchronousCode.DiskList]: CommandNames.DiskListCommand,
+	[SynchronousCode.FormatReady]: 'format ready',
+	[SynchronousCode.Notify]: CommandNames.NotifyCommand,
+	[SynchronousCode.OK]: 'ok',
+	[SynchronousCode.Remote]: CommandNames.RemoteCommand,
+	[SynchronousCode.SlotInfo]: CommandNames.SlotInfoCommand,
+	[SynchronousCode.TransportInfo]: CommandNames.TransportInfoCommand,
+	[SynchronousCode.Uptime]: CommandNames.UptimeCommand
 }
 
 export const ParameterMap = {
