@@ -1,10 +1,10 @@
 {
-	"name": "hyperdeck-server-connection",
+	"name": "@meyer/hyperdeck-emulator",
 	"version": "0.0.3",
 	"description": "Typescript Node.js library for emulating a Blackmagic Hyperdeck",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"module": "dist/hyperdeck-server-connection.esm.js",
+	"module": "dist/hyperdeck-emulator.esm.js",
 	"browser": "dist/browser/index.js",
 	"license": "MIT",
 	"engines": {

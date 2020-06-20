@@ -27,11 +27,7 @@ const getStdout = (command) =>
 
 	console.log({ commitOffsetCount, currentGitHash, newVersion })
 
-	const updatedPkgJson = Object.assign({}, pkgJson, {
-		name: '@meyer/hyperdeck-emulator',
-		module: 'dist/hyperdeck-emulator.esm.js',
-		version: newVersion
-	})
+	const updatedPkgJson = Object.assign({}, pkgJson, { version: newVersion })
 
 	await fs.promises.writeFile(
 		path.join(PROJECT_ROOT, 'package.json'),
