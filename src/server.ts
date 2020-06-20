@@ -13,6 +13,7 @@ import {
 	Buildable
 } from './types'
 import { createServer, Server } from 'net'
+import pino from 'pino'
 
 type Handler<C extends DeserializedCommand, R extends any> = (command: C) => Promise<R>
 
@@ -23,6 +24,7 @@ const noop = async () => {
 }
 
 export class HyperdeckServer {
+	private logger: pino.Logger
 	private _sockets: { [id: string]: HyperdeckSocket } = {}
 	private _server: Server
 
@@ -54,17 +56,25 @@ export class HyperdeckServer {
 	onIdentify: Handler<DeserializedCommands.IdentifyCommand, void> = noop
 	onWatchdog: Handler<DeserializedCommands.WatchdogCommand, void> = noop
 
-	constructor(ip?: string) {
+	constructor(ip?: string, logger = pino()) {
+		this.logger = logger.child({ source: 'HyperDeck Emulator' })
+
 		this._server = createServer((socket) => {
+			this.logger.debug('connection')
 			const socketId = Math.random().toString(35).substr(-6)
-			this._sockets[socketId] = new HyperdeckSocket(socket, (cmd) =>
-				this._receivedCommand(cmd)
+			this._sockets[socketId] = new HyperdeckSocket(
+				socket,
+				this.logger.child({ source: 'HyperDeck socket ' + socketId }),
+				(cmd) => this._receivedCommand(cmd)
 			)
 			this._sockets[socketId].on('disconnected', () => {
 				delete this._sockets[socketId]
 			})
 		})
-		this._server.on('listening', () => console.log('listening'))
+
+		this._server.on('listening', () => this.logger.info('listening'))
+		this._server.on('close', () => this.logger.info('connection closed'))
+		this._server.on('error', (err) => this.logger.error('server error:', err))
 		this._server.maxConnections = 1
 		this._server.listen(9993, ip)
 	}
@@ -88,6 +98,7 @@ export class HyperdeckServer {
 	}
 
 	private async _receivedCommand(cmd: DeserializedCommand): Promise<Buildable> {
+		this.logger.info({ cmd }, '_receivedCommand')
 		try {
 			if (cmd.name === CommandNames.DeviceInfoCommand) {
 				const res = await this.onDeviceInfo(cmd)

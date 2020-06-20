@@ -35,7 +35,7 @@ export interface TransportInfo {
 	'display timecode': string
 	timecode: string
 	'video format': VideoFormat
-	loop: 'string'
+	loop: string
 }
 
 export interface SlotInfo {

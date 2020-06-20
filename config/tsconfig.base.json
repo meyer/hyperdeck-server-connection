@@ -4,6 +4,7 @@
 		// ES2016 supports node >=7.5.0, according to https://node.green/#ES2016
 		"target": "ES2016",
 		"moduleResolution": "node",
+		"esModuleInterop": true,
 		"sourceMap": true,
 		"strictNullChecks": true,
 		"forceConsistentCasingInFileNames": true,

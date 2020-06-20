@@ -1,4 +1,12 @@
 export * from './server'
 
-import { ResponseInterface } from './types'
-export { ResponseInterface }
+export {
+	ResponseInterface,
+	ErrorCode,
+	AsynchronousCode,
+	NotifyType,
+	SynchronousCode,
+	FileFormats,
+	VideoFormat,
+	TransportStatus
+} from './types'

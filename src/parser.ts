@@ -1,13 +1,12 @@
 import { DeserializedCommand, Hash, ParameterMap } from './types'
+import { Logger } from 'pino'
 
 export class MultilineParser {
-	private _debug: boolean
-	private _log: (...args: unknown[]) => void
+	private _log: Logger
 	private _linesQueue: string[] = []
 
-	constructor(debug: boolean, log: (...args: unknown[]) => void) {
-		this._debug = debug
-		this._log = log
+	constructor(logger: Logger) {
+		this._log = logger.child({ source: 'MultilineParser' })
 	}
 
 	receivedString(data: string): DeserializedCommand[] {
@@ -78,7 +77,9 @@ export class MultilineParser {
 					}
 				}
 
-				if (!bobs.length) throw new Error('Command malformed / paramName not recognised')
+				if (!bobs.length) {
+					throw new Error('Command malformed / paramName not recognised')
+				}
 
 				params[param] = bobs.join(' ')
 				param = nextParam
@@ -93,7 +94,7 @@ export class MultilineParser {
 		} else {
 			const headerMatch = lines[0].match(/(.+?)(:|)$/im)
 			if (!headerMatch) {
-				if (this._debug) this._log('failed to parse header', lines[0])
+				this._log.error({ header: lines[0] }, 'failed to parse header')
 				return null
 			}
 
@@ -104,7 +105,7 @@ export class MultilineParser {
 			for (let i = 1; i < lines.length; i++) {
 				const lineMatch = lines[i].match(/^(.*?): (.*)$/im)
 				if (!lineMatch) {
-					if (this._debug) this._log('failed to parse line', lines[i])
+					this._log.error({ line: lines[i] }, 'failed to parse line')
 					continue
 				}
 

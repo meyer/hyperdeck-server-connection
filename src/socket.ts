@@ -13,11 +13,40 @@ import {
 	Buildable
 } from './types'
 import { MultilineParser } from './parser'
+import type { Logger } from 'pino'
 
 export class HyperdeckSocket extends EventEmitter {
-	private _socket: Socket
+	constructor(
+		private _socket: Socket,
+		private logger: Logger,
+		private _receivedCommand: (cmd: DeserializedCommand) => Promise<Buildable>
+	) {
+		super()
+
+		this._parser = new MultilineParser(this.logger)
+
+		this._socket.setEncoding('utf-8')
+
+		this._socket.on('data', (data: string) => {
+			this._onMessage(data)
+		})
+
+		this._socket.on('error', () => {
+			logger.info('error')
+			this._socket.destroy()
+			this.emit('disconnected')
+			logger.info('disconnected')
+		})
+
+		this.sendResponse(
+			new TResponse(AsynchronousCode.ConnectionInfo, {
+				'protocol version': '1.6',
+				model: 'NodeJS Hyperdeck Server Library'
+			})
+		)
+	}
+
 	private _parser: MultilineParser
-	private _receivedCommand: (cmd: DeserializedCommand) => Promise<Buildable>
 	private _lastReceived = -1
 	private _watchdogTimer: NodeJS.Timer | null = null
 
@@ -29,32 +58,13 @@ export class HyperdeckSocket extends EventEmitter {
 		'dropped frames': false // @todo: implement
 	}
 
-	constructor(socket: Socket, receivedCommand: (cmd: DeserializedCommand) => Promise<Buildable>) {
-		super()
-
-		this._parser = new MultilineParser(false, () => null)
-		this._receivedCommand = receivedCommand
-
-		this._socket = socket
-		this._socket.setEncoding('utf-8')
-		this._socket.on('data', (data: string) => this._onMessage(data))
-		this._socket.on('error', () => {
-			this._socket.destroy()
-			this.emit('disconnected')
-		})
-
-		this.sendResponse(
-			new TResponse(AsynchronousCode.ConnectionInfo, {
-				'protocol version': '1.6',
-				model: 'NodeJS Hyperdeck Server Library'
-			})
-		)
-	}
-
 	private _onMessage(data: string): void {
+		this.logger.debug('onMessage(%s)', data)
+
 		this._lastReceived = Date.now()
 
 		const cmds = this._parser.receivedString(data)
+		this.logger.debug('commands:', cmds)
 
 		for (const cmd of cmds) {
 			// special cases
@@ -102,9 +112,11 @@ export class HyperdeckSocket extends EventEmitter {
 
 			this._receivedCommand(cmd).then(
 				(res) => {
+					this.logger.info({ res }, '_receivedCommand response')
 					this.sendResponse(res)
 				},
 				() => {
+					this.logger.error({}, '_receivedCommand error response')
 					// not implemented by client code:
 					this.sendResponse(new TResponse(ErrorCode.Unsupported))
 				}
@@ -118,6 +130,7 @@ export class HyperdeckSocket extends EventEmitter {
 	}
 
 	notify(type: NotifyType, params: Hash<string>): void {
+		this.logger.debug('notify:', type, params)
 		if (type === NotifyType.Configuration && this._notifySettings.configuration) {
 			this.sendResponse(new TResponse(AsynchronousCode.ConfigurationInfo, params))
 		} else if (type === NotifyType.Remote && this._notifySettings.remote) {
