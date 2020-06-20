@@ -1,6 +1,4 @@
-# Hyperdeck server connection
-
-[![CircleCI](https://circleci.com/gh/baltedewit/hyperdeck-server-connection.svg?style=svg)](https://circleci.com/gh/baltedewit/hyperdeck-server-connection)
+# HyperDeck Emulator ![CI](https://github.com/meyer/hyperdeck-server-connection/workflows/CI/badge.svg) ![Canary](https://github.com/meyer/hyperdeck-server-connection/workflows/Canary/badge.svg)
 
 ## Technology highlights
 
@@ -46,16 +44,6 @@ s.onPlay = async (cmd) => {
 		loop: false
 	})
 }
-```
-
-### Events
-
-## Test
-
-This module will run tests by jest. (TBD)
-
-```sh
-$ yarn unit
 ```
 
 ## Acknowledgements
