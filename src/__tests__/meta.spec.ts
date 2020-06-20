@@ -36,12 +36,12 @@ describe('npm publish', () => {
 		- CHANGELOG.md
 		- LICENSE
 		- README.md
-		- dist/hyperdeck-emulator.cjs.development.js
-		- dist/hyperdeck-emulator.cjs.development.js.map
-		- dist/hyperdeck-emulator.cjs.production.min.js
-		- dist/hyperdeck-emulator.cjs.production.min.js.map
-		- dist/hyperdeck-emulator.esm.js
-		- dist/hyperdeck-emulator.esm.js.map
+		- dist/hyperdeck-server-connection.cjs.development.js
+		- dist/hyperdeck-server-connection.cjs.development.js.map
+		- dist/hyperdeck-server-connection.cjs.production.min.js
+		- dist/hyperdeck-server-connection.cjs.production.min.js.map
+		- dist/hyperdeck-server-connection.esm.js
+		- dist/hyperdeck-server-connection.esm.js.map
 		- dist/index.d.ts
 		- dist/index.d.ts.map
 		- dist/index.js
