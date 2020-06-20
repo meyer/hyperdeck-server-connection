@@ -8,7 +8,10 @@ module.exports = {
 		'prettier/prettier': 'error',
 		'no-use-before-define': 'off'
 	},
-	env: { es2017: true },
+	env: {
+		es2017: true,
+		node: true
+	},
 	parserOptions: { sourceType: 'module', ecmaVersion: 2018 },
 	overrides: [
 		{

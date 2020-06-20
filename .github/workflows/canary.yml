@@ -1,15 +1,24 @@
-name: CI
+name: Canary
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
 
 jobs:
-  build:
-    name: Run tests and build
+  canary:
+    name: Publish canary to NPM
     runs-on: ubuntu-latest
+
+    # ignore publish commits
+    if: "!startsWith(github.event.head_commit.message, 'Publish ')"
 
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
+        with:
+          # fetch everything so we can properly calculate what needs to be published
+          fetch-depth: 0
 
       - name: Use Node 10
         uses: actions/setup-node@v1
@@ -39,7 +48,22 @@ jobs:
         env:
           CI: true
 
+      # this step must run before `yarn build`!
+      - name: Bump canary version
+        run: yarn run bump-canary-version
+
       - name: Build
         run: yarn build
         env:
           CI: true
+
+      - name: Configure NPM
+        run: |
+          npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+          npm set username ${{ secrets.NPM_USERNAME }}
+          npm set email ${{ secrets.NPM_EMAIL }}
+
+      - name: Publish
+        run: npm publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
