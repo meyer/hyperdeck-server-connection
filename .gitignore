@@ -1,9 +1,7 @@
 node_modules
 dist
-test
 
 /coverage
-/docs
 .nyc_output
 *.log
 
