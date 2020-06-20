@@ -24,7 +24,7 @@ export interface Buildable {
 	build(): string
 }
 
-export class TResponse<P extends Record<string, any> = {}> implements Buildable {
+export class TResponse<P extends Record<string, any> = Record<string, any>> implements Buildable {
 	constructor(public code: ResponseCode, public params?: P) {
 		this.name = responseNamesByCode[code]
 	}
