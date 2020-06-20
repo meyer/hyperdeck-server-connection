@@ -64,6 +64,6 @@ jobs:
           npm set email ${{ secrets.NPM_EMAIL }}
 
       - name: Publish
-        run: npm publish
+        run: npm publish --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
