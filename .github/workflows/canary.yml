@@ -64,6 +64,6 @@ jobs:
           npm set email ${{ secrets.NPM_EMAIL }}
 
       - name: Publish
-        run: npm publish --access public
+        run: npm publish --tag latest --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
