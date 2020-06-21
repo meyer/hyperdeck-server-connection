@@ -77,11 +77,11 @@ describe('npm publish', () => {
 		- src/constants.ts
 		- src/formatClipsGetResponse.ts
 		- src/HyperDeckServer.ts
+		- src/HyperDeckSocket.ts
 		- src/index.ts
 		- src/invariant.ts
 		- src/messageForCode.ts
 		- src/MultilineParser.ts
-		- src/socket.ts
 		- src/Timecode.ts
 		- src/types.ts
 		- src/types/DeserializedCommands.ts

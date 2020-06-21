@@ -4,7 +4,6 @@ import {
 	AsynchronousCode,
 	DeserializedCommand,
 	ErrorCode,
-	CommandNames,
 	NotifyType,
 	SynchronousCode,
 	ResponseCode
@@ -44,11 +43,11 @@ export class HyperDeckSocket extends EventEmitter {
 			this.onMessage(data)
 		})
 
-		this.socket.on('error', () => {
-			logger.info('error')
+		this.socket.on('error', (err) => {
+			logger.info({ err }, 'error')
 			this.socket.destroy()
 			this.emit('disconnected')
-			logger.info('disconnected')
+			logger.info('manually disconnected')
 		})
 
 		this.sendResponse(AsynchronousCode.ConnectionInfo, {
@@ -79,7 +78,7 @@ export class HyperDeckSocket extends EventEmitter {
 
 		for (const cmd of cmds) {
 			// special cases
-			if (cmd.name === CommandNames.WatchdogCommand) {
+			if (cmd.name === 'watchdog') {
 				if (this.watchdogTimer) clearInterval(this.watchdogTimer)
 
 				const watchdogCmd = cmd as DeserializedCommands.WatchdogCommand
@@ -97,7 +96,7 @@ export class HyperDeckSocket extends EventEmitter {
 						}
 					}, Number(watchdogCmd.parameters.period) * 1000)
 				}
-			} else if (cmd.name === CommandNames.NotifyCommand) {
+			} else if (cmd.name === 'notify') {
 				const notifyCmd = cmd as DeserializedCommands.NotifyCommand
 
 				if (Object.keys(notifyCmd.parameters).length > 0) {
@@ -166,14 +165,17 @@ export class HyperDeckSocket extends EventEmitter {
 
 	notify(type: NotifyType, params: Record<string, string>): void {
 		this.logger.info({ type, params }, 'notify')
-		if (type === NotifyType.Configuration && this.notifySettings.configuration) {
+
+		if (type === 'configuration' && this.notifySettings.configuration) {
 			this.sendResponse(AsynchronousCode.ConfigurationInfo, params)
-		} else if (type === NotifyType.Remote && this.notifySettings.remote) {
+		} else if (type === 'remote' && this.notifySettings.remote) {
 			this.sendResponse(AsynchronousCode.RemoteInfo, params)
-		} else if (type === NotifyType.Slot && this.notifySettings.slot) {
+		} else if (type === 'slot' && this.notifySettings.slot) {
 			this.sendResponse(AsynchronousCode.SlotInfo, params)
-		} else if (type === NotifyType.Transport && this.notifySettings.transport) {
+		} else if (type === 'transport' && this.notifySettings.transport) {
 			this.sendResponse(AsynchronousCode.TransportInfo, params)
+		} else {
+			this.logger.error({ type, params }, 'unhandled notify type')
 		}
 	}
 }

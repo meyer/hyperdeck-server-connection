@@ -1,5 +1,6 @@
-import { DeserializedCommand, ParameterMap } from './types'
-import { Logger } from 'pino'
+import type { DeserializedCommand } from './types'
+import { parametersByCommandName } from './constants'
+import type { Logger } from 'pino'
 
 export class MultilineParser {
 	private logger: Logger
@@ -59,11 +60,11 @@ export class MultilineParser {
 		if (lines.length === 1 && lines[0].indexOf(':') > -1) {
 			const bits = lines[0].split(': ')
 
-			const msg = bits.shift() as keyof typeof ParameterMap
+			const msg = bits.shift() as keyof typeof parametersByCommandName
 			if (!msg) throw new Error('Unrecognised command')
 
 			const params: Record<string, string> = {}
-			const paramNames = new Set(ParameterMap[msg])
+			const paramNames = new Set(parametersByCommandName[msg])
 			let param = bits.shift()
 			if (!param) throw new Error('No named parameters found')
 			for (let i = 0; i < bits.length - 1; i++) {

@@ -1,6 +1,6 @@
-import { HyperDeckSocket } from './socket'
-import type { ReceivedCommandCallback } from './socket'
-import { DeserializedCommand, SynchronousCode, CommandNames, ErrorCode, NotifyType } from './types'
+import { HyperDeckSocket } from './HyperDeckSocket'
+import type { ReceivedCommandCallback } from './HyperDeckSocket'
+import { DeserializedCommand, SynchronousCode, ErrorCode, NotifyType } from './types'
 import * as ResponseInterface from './types/ResponseInterface'
 import * as DeserializedCommands from './types/DeserializedCommands'
 import { formatClipsGetResponse } from './formatClipsGetResponse'
@@ -78,11 +78,11 @@ export class HyperDeckServer {
 	}
 
 	notifySlot(params: Record<string, string>): void {
-		this.notify(NotifyType.Slot, params)
+		this.notify('slot', params)
 	}
 
 	notifyTransport(params: Record<string, string>): void {
-		this.notify(NotifyType.Transport, params)
+		this.notify('transport', params)
 	}
 
 	private notify(type: NotifyType, params: Record<string, string>): void {
@@ -97,102 +97,102 @@ export class HyperDeckServer {
 
 		this.logger.info({ cmd }, '<-- ' + cmd.name)
 		try {
-			if (cmd.name === CommandNames.DeviceInfoCommand) {
+			if (cmd.name === 'device info') {
 				const res = await this.onDeviceInfo(cmd)
 				return { code: SynchronousCode.DeviceInfo, params: res }
 			}
 
-			if (cmd.name === CommandNames.DiskListCommand) {
+			if (cmd.name === 'disk list') {
 				const res = await this.onDiskList(cmd)
 				return { code: SynchronousCode.DiskList, params: res }
 			}
 
-			if (cmd.name === CommandNames.PreviewCommand) {
+			if (cmd.name === 'preview') {
 				await this.onPreview(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.PlayCommand) {
+			if (cmd.name === 'play') {
 				await this.onPlay(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.PlayrangeSetCommand) {
+			if (cmd.name === 'playrange set') {
 				await this.onPlayrangeSet(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.PlayrangeClearCommand) {
+			if (cmd.name === 'playrange clear') {
 				await this.onPlayrangeClear(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.RecordCommand) {
+			if (cmd.name === 'record') {
 				await this.onRecord(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.StopCommand) {
+			if (cmd.name === 'stop') {
 				await this.onStop(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.ClipsCountCommand) {
+			if (cmd.name === 'clips count') {
 				const res = await this.onClipsCount(cmd)
 				return { code: SynchronousCode.ClipsCount, params: res }
 			}
 
-			if (cmd.name === CommandNames.ClipsGetCommand) {
+			if (cmd.name === 'clips get') {
 				const res = await this.onClipsGet(cmd).then(formatClipsGetResponse)
 				return { code: SynchronousCode.ClipsInfo, params: res }
 			}
 
-			if (cmd.name === CommandNames.ClipsAddCommand) {
+			if (cmd.name === 'clips add') {
 				await this.onClipsAdd(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.ClipsClearCommand) {
+			if (cmd.name === 'clips clear') {
 				await this.onClipsClear(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.TransportInfoCommand) {
+			if (cmd.name === 'transport info') {
 				const res = await this.onTransportInfo(cmd)
 				return { code: SynchronousCode.TransportInfo, params: res }
 			}
 
-			if (cmd.name === CommandNames.SlotInfoCommand) {
+			if (cmd.name === 'slot info') {
 				const res = await this.onSlotInfo(cmd)
 				return { code: SynchronousCode.SlotInfo, params: res }
 			}
 
-			if (cmd.name === CommandNames.SlotSelectCommand) {
+			if (cmd.name === 'slot select') {
 				await this.onSlotSelect(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.NotifyCommand) {
+			if (cmd.name === 'notify') {
 				// implemented in socket.ts
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.GoToCommand) {
+			if (cmd.name === 'go to') {
 				await this.onGoTo(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.JogCommand) {
+			if (cmd.name === 'jog') {
 				await this.onJog(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.ShuttleCommand) {
+			if (cmd.name === 'shuttle') {
 				await this.onShuttle(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.RemoteCommand) {
+			if (cmd.name === 'remote') {
 				return {
 					code: SynchronousCode.Remote,
 					params: {
@@ -202,7 +202,7 @@ export class HyperDeckServer {
 				}
 			}
 
-			if (cmd.name === CommandNames.ConfigurationCommand) {
+			if (cmd.name === 'configuration') {
 				const res = await this.onConfiguration(cmd)
 				if (res) {
 					return { code: SynchronousCode.Configuration, params: res }
@@ -210,12 +210,12 @@ export class HyperDeckServer {
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.UptimeCommand) {
+			if (cmd.name === 'uptime') {
 				const res = await this.onUptime(cmd)
 				return { code: SynchronousCode.Uptime, params: res }
 			}
 
-			if (cmd.name === CommandNames.FormatCommand) {
+			if (cmd.name === 'format') {
 				const res = await this.onFormat(cmd)
 				if (res) {
 					return { code: SynchronousCode.FormatReady, params: res }
@@ -223,17 +223,17 @@ export class HyperDeckServer {
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.IdentifyCommand) {
+			if (cmd.name === 'identify') {
 				await this.onIdentify(cmd)
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.WatchdogCommand) {
+			if (cmd.name === 'watchdog') {
 				// implemented in socket.ts
 				return SynchronousCode.OK
 			}
 
-			if (cmd.name === CommandNames.PingCommand) {
+			if (cmd.name === 'ping') {
 				// implemented in socket.ts
 				return SynchronousCode.OK
 			}

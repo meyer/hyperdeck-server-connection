@@ -57,48 +57,14 @@ export enum AsynchronousCode {
 	ConfigurationInfo = 511
 }
 
-export enum NotifyType {
-	Slot,
-	Transport,
-	Remote,
-	Configuration
-}
-
-export enum CommandNames {
-	DeviceInfoCommand = 'device info',
-	DiskListCommand = 'disk list',
-	PreviewCommand = 'preview',
-	PlayCommand = 'play',
-	PlayrangeSetCommand = 'playrange set',
-	PlayrangeClearCommand = 'playrange clear',
-	RecordCommand = 'record',
-	StopCommand = 'stop',
-	ClipsCountCommand = 'clips count',
-	ClipsGetCommand = 'clips get',
-	ClipsAddCommand = 'clips add',
-	ClipsClearCommand = 'clips clear',
-	TransportInfoCommand = 'transport info',
-	SlotInfoCommand = 'slot info',
-	SlotSelectCommand = 'slot select',
-	NotifyCommand = 'notify',
-	GoToCommand = 'goto',
-	JogCommand = 'jog',
-	ShuttleCommand = 'shuttle',
-	RemoteCommand = 'remote',
-	ConfigurationCommand = 'configuration',
-	UptimeCommand = 'uptime',
-	FormatCommand = 'format',
-	IdentifyCommand = 'identify',
-	WatchdogCommand = 'watchdog',
-	PingCommand = 'ping'
-}
+export type NotifyType = 'slot' | 'transport' | 'remote' | 'configuration'
 
 export const responseNamesByCode: Record<ResponseCode, string> = {
 	[AsynchronousCode.ConfigurationInfo]: 'configuration info',
 	[AsynchronousCode.ConnectionInfo]: 'connection info',
 	[AsynchronousCode.RemoteInfo]: 'remote info',
-	[AsynchronousCode.SlotInfo]: CommandNames.SlotInfoCommand,
-	[AsynchronousCode.TransportInfo]: CommandNames.TransportInfoCommand,
+	[AsynchronousCode.SlotInfo]: 'slot info',
+	[AsynchronousCode.TransportInfo]: 'transport info',
 	[ErrorCode.ConnectionRejected]: 'connection rejected',
 	[ErrorCode.DiskError]: 'disk error',
 	[ErrorCode.DiskFull]: 'disk full',
@@ -117,94 +83,80 @@ export const responseNamesByCode: Record<ResponseCode, string> = {
 	[ErrorCode.TimelineEmpty]: 'timeline empty',
 	[ErrorCode.Unsupported]: 'unsupported',
 	[ErrorCode.UnsupportedParameter]: 'unsupported parameter',
-	[SynchronousCode.ClipsCount]: CommandNames.ClipsCountCommand,
+	[SynchronousCode.ClipsCount]: 'clips count',
 	[SynchronousCode.ClipsInfo]: 'clips info',
-	[SynchronousCode.Configuration]: CommandNames.ConfigurationCommand,
-	[SynchronousCode.DeviceInfo]: CommandNames.DeviceInfoCommand,
-	[SynchronousCode.DiskList]: CommandNames.DiskListCommand,
+	[SynchronousCode.Configuration]: 'configuration',
+	[SynchronousCode.DeviceInfo]: 'device info',
+	[SynchronousCode.DiskList]: 'disk list',
 	[SynchronousCode.FormatReady]: 'format ready',
-	[SynchronousCode.Notify]: CommandNames.NotifyCommand,
+	[SynchronousCode.Notify]: 'notify',
 	[SynchronousCode.OK]: 'ok',
-	[SynchronousCode.Remote]: CommandNames.RemoteCommand,
-	[SynchronousCode.SlotInfo]: CommandNames.SlotInfoCommand,
-	[SynchronousCode.TransportInfo]: CommandNames.TransportInfoCommand,
-	[SynchronousCode.Uptime]: CommandNames.UptimeCommand
+	[SynchronousCode.Remote]: 'remote',
+	[SynchronousCode.SlotInfo]: 'slot info',
+	[SynchronousCode.TransportInfo]: 'transport info',
+	[SynchronousCode.Uptime]: 'uptime'
 }
 
-export const ParameterMap = {
-	help: [],
-	commands: [],
-	'device info': [],
-	'disk list': ['slot id'],
-	quit: [],
-	ping: [],
-	preview: ['enable'],
-	play: ['speed', 'loop', 'single clip'],
-	'playrange set': ['clip id', 'in', 'out'],
-	'playrange clear': [],
-	record: ['name'],
-	stop: [],
-	'clips count': [],
-	'clips get': ['clip id', 'count'],
-	'clips add': ['name'],
-	'clips clear': [],
-	'transport info': [],
-	'slot info': ['slot id'],
-	'slot select': ['slot id', 'video format'],
-	notify: ['remote', 'transport', 'slot', 'configuration', 'dropped frames'],
-	goto: ['clip id', 'clip', 'timeline', 'timecode', 'slot id'],
-	jog: ['timecode'],
-	shuttle: ['speed'],
-	remote: ['enable', 'override'],
-	configuration: ['video input', 'audio input', 'file format'],
-	uptime: [],
-	format: ['prepare', 'confirm'],
-	identify: ['enable'],
-	watchdog: ['period']
+export const slotStatus = {
+	empty: true,
+	mounting: true,
+	error: true,
+	mounted: true
 }
 
-export enum SlotStatus {
-	EMPTY = 'empty',
-	MOUNTING = 'mounting',
-	ERROR = 'error',
-	MOUNTED = 'mounted'
+export type SlotStatus = keyof typeof slotStatus
+
+export const isSlotStatus = (value: any): value is SlotStatus => {
+	return typeof value === 'string' && slotStatus.hasOwnProperty(value)
 }
 
-export enum VideoFormat {
-	NTSC = 'NTSC',
-	PAL = 'PAL',
-	NTSCp = 'NTSCp',
-	PALp = 'PALp',
-	_720p50 = '720p50',
-	_720p5994 = '720p5994',
-	_720p60 = '720p60',
-	_1080p23976 = '1080p23976',
-	_1080p24 = '1080p24',
-	_1080p25 = '1080p25',
-	_1080p2997 = '1080p2997',
-	_1080p30 = '1080p30',
-	_1080i50 = '1080i50',
-	_1080i5994 = '1080i5994',
-	_1080i60 = '1080i60',
-	_4Kp23976 = '4Kp23976',
-	_4Kp24 = '4Kp24',
-	_4Kp25 = '4Kp25',
-	_4Kp2997 = '4Kp2997',
-	_4Kp30 = '4Kp30',
-	_4Kp50 = '4Kp50',
-	_4Kp5994 = '4Kp5994',
-	_4Kp60 = '4Kp60'
+export const videoFormats = {
+	NTSC: true,
+	PAL: true,
+	NTSCp: true,
+	PALp: true,
+	'720p50': true,
+	'720p5994': true,
+	'720p60': true,
+	'1080p23976': true,
+	'1080p24': true,
+	'1080p25': true,
+	'1080p2997': true,
+	'1080p30': true,
+	'1080i50': true,
+	'1080i5994': true,
+	'1080i60': true,
+	'4Kp23976': true,
+	'4Kp24': true,
+	'4Kp25': true,
+	'4Kp2997': true,
+	'4Kp30': true,
+	'4Kp50': true,
+	'4Kp5994': true,
+	'4Kp60': true
 }
 
-export enum TransportStatus {
-	PREVIEW = 'preview',
-	STOPPED = 'stopped',
-	PLAY = 'play',
-	FORWARD = 'forward',
-	REWIND = 'rewind',
-	JOG = 'jog',
-	SHUTTLE = 'shuttle',
-	RECORD = 'record'
+export type VideoFormat = keyof typeof videoFormats
+
+export const isVideoFormat = (value: any): value is VideoFormat => {
+	return typeof value === 'string' && videoFormats.hasOwnProperty(value)
+}
+
+export const transportStatus = {
+	preview: true,
+	stopped: true,
+	play: true,
+	forward: true,
+	rewind: true,
+	jog: true,
+	shuttle: true,
+	record: true
+}
+
+export type TransportStatus = keyof typeof transportStatus
+
+export const isTransportStatus = (value: any): value is TransportStatus => {
+	return typeof value === 'string' && transportStatus.hasOwnProperty(value)
 }
 
 export enum FileFormat {
