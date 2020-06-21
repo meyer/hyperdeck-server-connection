@@ -1,6 +1,6 @@
-import pino from 'pino'
 import type { Socket } from 'net'
 import { EventEmitter } from 'events'
+import { getTestLogger } from './utils'
 
 const noop = (): any => {
 	return
@@ -35,26 +35,10 @@ describe('HyperdeckServer', () => {
 	it('sends output back to the ATEM', async () => {
 		expect.assertions(3)
 
-		const loggedOutput: any[] = []
-
-		const logger = pino({
-			level: 'trace',
-			name: 'pino-jest',
-			prettyPrint: true,
-			prettifier: () => ({
-				pid,
-				source,
-				time,
-				hostname,
-				name,
-				...args
-			}: Record<string, any>) => {
-				loggedOutput.push(args)
-			}
-		})
+		const logger = getTestLogger()
 
 		const server = await import('../HyperDeckServer')
-		const hyperdeck = new server.HyperDeckServer('0.0.0.0', logger)
+		const hyperdeck = new server.HyperDeckServer('0.0.0.0', logger.logger)
 		const socketEntries = Object.entries(hyperdeck['sockets'])
 		expect(socketEntries.length).toBe(1)
 		const hyperdeckSocket = socketEntries[0][1]
@@ -82,15 +66,16 @@ describe('HyperdeckServer', () => {
 		]
 	`)
 
-		expect(loggedOutput).toMatchInlineSnapshot(`
+		expect(logger.getLoggedOutput()).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "level": 30,
 		    "msg": "connection",
 		  },
 		  Object {
+		    "cmd": undefined,
 		    "level": 30,
-		    "msg": "--> sendResponse",
+		    "msg": "--> send response to client",
 		    "responseText": "500 connection info:
 		protocol version: 1.11
 		model: NodeJS HyperDeck Server Library
@@ -100,7 +85,7 @@ describe('HyperdeckServer', () => {
 		  Object {
 		    "data": "banana",
 		    "level": 30,
-		    "msg": "onMessage",
+		    "msg": "<-- received message from client",
 		  },
 		  Object {
 		    "cmds": Array [
@@ -111,7 +96,7 @@ describe('HyperdeckServer', () => {
 		      },
 		    ],
 		    "level": 30,
-		    "msg": "commands",
+		    "msg": "parsed commands",
 		  },
 		  Object {
 		    "cmd": Object {
@@ -128,12 +113,18 @@ describe('HyperdeckServer', () => {
 		      "parameters": Object {},
 		      "raw": "banana",
 		    },
+		    "err": "Unhandled command name: banana",
 		    "level": 50,
-		    "msg": "internal error",
+		    "msg": "unhandled command name",
 		  },
 		  Object {
+		    "cmd": Object {
+		      "name": "banana",
+		      "parameters": Object {},
+		      "raw": "banana",
+		    },
 		    "level": 50,
-		    "msg": "--> banana",
+		    "msg": "--> send response to client",
 		    "responseText": "108 internal error
 		",
 		  },

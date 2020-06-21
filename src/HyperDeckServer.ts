@@ -1,17 +1,9 @@
 import { HyperDeckSocket } from './socket'
-import {
-	DeserializedCommand,
-	SynchronousCode,
-	CommandNames,
-	ErrorCode,
-	NotifyType,
-	Buildable
-} from './types'
+import type { ReceivedCommandCallback } from './socket'
+import { DeserializedCommand, SynchronousCode, CommandNames, ErrorCode, NotifyType } from './types'
 import * as ResponseInterface from './types/ResponseInterface'
 import * as DeserializedCommands from './types/DeserializedCommands'
 import { formatClipsGetResponse } from './formatClipsGetResponse'
-import { ErrorResponse } from './ErrorResponse'
-import { TResponse } from './TResponse'
 import { createServer, Server } from 'net'
 import pino from 'pino'
 
@@ -99,7 +91,7 @@ export class HyperDeckServer {
 		}
 	}
 
-	private async receivedCommand(cmd: DeserializedCommand): Promise<Buildable> {
+	private receivedCommand: ReceivedCommandCallback = async (cmd) => {
 		// TODO(meyer) more sophisticated debouncing
 		await new Promise((resolve) => setTimeout(() => resolve(), 200))
 
@@ -107,156 +99,154 @@ export class HyperDeckServer {
 		try {
 			if (cmd.name === CommandNames.DeviceInfoCommand) {
 				const res = await this.onDeviceInfo(cmd)
-				return new TResponse(SynchronousCode.DeviceInfo, res)
+				return { code: SynchronousCode.DeviceInfo, params: res }
 			}
 
 			if (cmd.name === CommandNames.DiskListCommand) {
 				const res = await this.onDiskList(cmd)
-				return new TResponse(SynchronousCode.DiskList, res)
+				return { code: SynchronousCode.DiskList, params: res }
 			}
 
 			if (cmd.name === CommandNames.PreviewCommand) {
 				await this.onPreview(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.PlayCommand) {
 				await this.onPlay(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.PlayrangeSetCommand) {
 				await this.onPlayrangeSet(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.PlayrangeClearCommand) {
 				await this.onPlayrangeClear(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.RecordCommand) {
 				await this.onRecord(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.StopCommand) {
 				await this.onStop(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.ClipsCountCommand) {
 				const res = await this.onClipsCount(cmd)
-				return new TResponse(SynchronousCode.ClipsCount, res)
+				return { code: SynchronousCode.ClipsCount, params: res }
 			}
 
 			if (cmd.name === CommandNames.ClipsGetCommand) {
 				const res = await this.onClipsGet(cmd).then(formatClipsGetResponse)
-				return new TResponse(SynchronousCode.ClipsInfo, res)
+				return { code: SynchronousCode.ClipsInfo, params: res }
 			}
 
 			if (cmd.name === CommandNames.ClipsAddCommand) {
 				await this.onClipsAdd(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.ClipsClearCommand) {
 				await this.onClipsClear(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.TransportInfoCommand) {
 				const res = await this.onTransportInfo(cmd)
-				return new TResponse(SynchronousCode.TransportInfo, res)
+				return { code: SynchronousCode.TransportInfo, params: res }
 			}
 
 			if (cmd.name === CommandNames.SlotInfoCommand) {
 				const res = await this.onSlotInfo(cmd)
-				return new TResponse(SynchronousCode.SlotInfo, res)
+				return { code: SynchronousCode.SlotInfo, params: res }
 			}
 
 			if (cmd.name === CommandNames.SlotSelectCommand) {
 				await this.onSlotSelect(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.NotifyCommand) {
 				// implemented in socket.ts
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.GoToCommand) {
 				await this.onGoTo(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.JogCommand) {
 				await this.onJog(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.ShuttleCommand) {
 				await this.onShuttle(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.RemoteCommand) {
-				return new TResponse(SynchronousCode.Remote, {
-					enabled: true,
-					override: false
-				})
+				return {
+					code: SynchronousCode.Remote,
+					params: {
+						enabled: true,
+						override: false
+					}
+				}
 			}
 
 			if (cmd.name === CommandNames.ConfigurationCommand) {
 				const res = await this.onConfiguration(cmd)
 				if (res) {
-					return new TResponse(SynchronousCode.Configuration, res)
+					return { code: SynchronousCode.Configuration, params: res }
 				}
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.UptimeCommand) {
 				const res = await this.onUptime(cmd)
-				return new TResponse(SynchronousCode.Uptime, res)
+				return { code: SynchronousCode.Uptime, params: res }
 			}
 
 			if (cmd.name === CommandNames.FormatCommand) {
 				const res = await this.onFormat(cmd)
 				if (res) {
-					return new TResponse(SynchronousCode.FormatReady, res)
+					return { code: SynchronousCode.FormatReady, params: res }
 				}
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.IdentifyCommand) {
 				await this.onIdentify(cmd)
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.WatchdogCommand) {
 				// implemented in socket.ts
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			if (cmd.name === CommandNames.PingCommand) {
 				// implemented in socket.ts
-				return new TResponse(SynchronousCode.OK)
+				return SynchronousCode.OK
 			}
 
 			throw new Error('Unhandled command name: ' + cmd.name)
 		} catch (err) {
 			if (err instanceof UnimplementedError) {
 				this.logger.error({ cmd }, 'unimplemented')
-				return new TResponse(ErrorCode.Unsupported)
+				return ErrorCode.Unsupported
 			}
 
-			if (err && typeof err.code === 'number' && ErrorCode[err.code] && err.msg) {
-				this.logger.error({ err }, 'error with code')
-				return new ErrorResponse(err.code, err.msg)
-			}
-
-			this.logger.error({ cmd }, 'internal error')
-			return new TResponse(ErrorCode.InternalError)
+			this.logger.error({ cmd, err: err.message }, 'unhandled command name')
+			return ErrorCode.InternalError
 		}
 	}
 }

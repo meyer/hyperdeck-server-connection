@@ -36,10 +36,10 @@ describe('npm publish', () => {
 		- CHANGELOG.md
 		- LICENSE
 		- README.md
+		- dist/__tests__/utils.d.ts
+		- dist/__tests__/utils.d.ts.map
 		- dist/constants.d.ts
 		- dist/constants.d.ts.map
-		- dist/ErrorResponse.d.ts
-		- dist/ErrorResponse.d.ts.map
 		- dist/formatClipsGetResponse.d.ts
 		- dist/formatClipsGetResponse.d.ts.map
 		- dist/hyperdeck-emulator.cjs.development.js
@@ -61,22 +61,20 @@ describe('npm publish', () => {
 		- dist/messageForCode.d.ts.map
 		- dist/MultilineParser.d.ts
 		- dist/MultilineParser.d.ts.map
-		- dist/state.d.ts
-		- dist/state.d.ts.map
 		- dist/Timecode.d.ts
 		- dist/Timecode.d.ts.map
-		- dist/TResponse.d.ts
-		- dist/TResponse.d.ts.map
 		- dist/types.d.ts
 		- dist/types.d.ts.map
 		- dist/types/DeserializedCommands.d.ts
 		- dist/types/DeserializedCommands.d.ts.map
 		- dist/types/ResponseInterface.d.ts
 		- dist/types/ResponseInterface.d.ts.map
+		- src/__tests__/HyperDeckServer.spec.ts
+		- src/__tests__/messageForCode.spec.ts
 		- src/__tests__/meta.spec.ts
-		- src/__tests__/server.spec.ts
+		- src/__tests__/MultilineParser.spec.ts
+		- src/__tests__/utils.ts
 		- src/constants.ts
-		- src/ErrorResponse.ts
 		- src/formatClipsGetResponse.ts
 		- src/HyperDeckServer.ts
 		- src/index.ts
@@ -85,7 +83,6 @@ describe('npm publish', () => {
 		- src/MultilineParser.ts
 		- src/socket.ts
 		- src/Timecode.ts
-		- src/TResponse.ts
 		- src/types.ts
 		- src/types/DeserializedCommands.ts
 		- src/types/ResponseInterface.ts

@@ -1,8 +1,20 @@
 import { CRLF } from './constants'
 import { ResponseCode, responseNamesByCode } from './types'
 
+// escape CR/LF and remove colons
+const sanitiseMessage = (input: string): string => {
+	return input.replace(/\r/g, '\\r').replace(/\n/g, '\\n').replace(/:/g, '')
+}
+
 /** For a given code, generate the response message that will be sent to the ATEM */
-export const messageForCode = (code: ResponseCode, params?: Record<string, unknown>): string => {
+export const messageForCode = (
+	code: ResponseCode,
+	params?: Record<string, unknown> | string
+): string => {
+	if (typeof params === 'string') {
+		return code + ' ' + sanitiseMessage(params) + CRLF
+	}
+
 	const firstLine = `${code} ${responseNamesByCode[code]}`
 
 	// bail if no params

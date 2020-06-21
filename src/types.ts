@@ -5,10 +5,6 @@ export interface NotificationConfig {
 	configuration: boolean
 }
 
-export interface Buildable {
-	build(): string
-}
-
 export interface DeserializedCommand {
 	raw: string
 	name: string

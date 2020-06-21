@@ -7,18 +7,32 @@ import {
 	CommandNames,
 	NotifyType,
 	SynchronousCode,
-	Buildable
+	ResponseCode
 } from './types'
 import * as DeserializedCommands from './types/DeserializedCommands'
-import { TResponse } from './TResponse'
 import { MultilineParser } from './MultilineParser'
 import type { Logger } from 'pino'
+import { messageForCode } from './messageForCode'
+
+interface ResponseWithMessage {
+	code: ErrorCode
+	message: string
+}
+
+interface ResponseWithParams {
+	code: ResponseCode
+	params?: Record<string, any>
+}
+
+export type ReceivedCommandCallback = (
+	cmd: DeserializedCommand
+) => Promise<ResponseCode | ResponseWithParams | ResponseWithMessage>
 
 export class HyperDeckSocket extends EventEmitter {
 	constructor(
 		private socket: Socket,
 		private logger: Logger,
-		private receivedCommand: (cmd: DeserializedCommand) => Promise<Buildable>
+		private receivedCommand: ReceivedCommandCallback
 	) {
 		super()
 
@@ -37,12 +51,10 @@ export class HyperDeckSocket extends EventEmitter {
 			logger.info('disconnected')
 		})
 
-		this.sendResponse(
-			new TResponse(AsynchronousCode.ConnectionInfo, {
-				'protocol version': '1.11',
-				model: 'NodeJS HyperDeck Server Library'
-			})
-		)
+		this.sendResponse(AsynchronousCode.ConnectionInfo, {
+			'protocol version': '1.11',
+			model: 'NodeJS HyperDeck Server Library'
+		})
 	}
 
 	private parser: MultilineParser
@@ -58,12 +70,12 @@ export class HyperDeckSocket extends EventEmitter {
 	}
 
 	private onMessage(data: string): void {
-		this.logger.info({ data }, 'onMessage')
+		this.logger.info({ data }, '<-- received message from client')
 
 		this.lastReceivedMS = Date.now()
 
 		const cmds = this.parser.receivedString(data)
-		this.logger.info({ cmds }, 'commands')
+		this.logger.info({ cmds }, 'parsed commands')
 
 		for (const cmd of cmds) {
 			// special cases
@@ -103,41 +115,65 @@ export class HyperDeckSocket extends EventEmitter {
 					>) {
 						settings[key] = this.notifySettings[key] ? 'true' : 'false'
 					}
-					this.sendResponse(new TResponse(SynchronousCode.Notify, settings), cmd)
+					this.sendResponse(SynchronousCode.Notify, settings, cmd)
 
 					continue
 				}
 			}
 
 			this.receivedCommand(cmd).then(
-				(res) => this.sendResponse(res, cmd),
+				(codeOrObj) => {
+					if (typeof codeOrObj === 'object') {
+						const code = codeOrObj.code
+						const paramsOrMessage =
+							('params' in codeOrObj && codeOrObj.params) ||
+							('message' in codeOrObj && codeOrObj.message) ||
+							undefined
+						return this.sendResponse(code, paramsOrMessage, cmd)
+					}
+
+					const code = codeOrObj
+
+					if (
+						typeof code === 'number' &&
+						(ErrorCode[code] || SynchronousCode[code] || AsynchronousCode[code])
+					) {
+						return this.sendResponse(code, undefined, cmd)
+					}
+
+					this.logger.error(
+						{ cmd, codeOrObj },
+						'codeOrObj was neither a ResponseCode nor a response object'
+					)
+					this.sendResponse(ErrorCode.InternalError, undefined, cmd)
+				},
 				// not implemented by client code:
-				() => this.sendResponse(new TResponse(ErrorCode.Unsupported), cmd)
+				() => this.sendResponse(ErrorCode.Unsupported, undefined, cmd)
 			)
 		}
 	}
 
-	sendResponse(res: Buildable, cmd?: DeserializedCommand): void {
-		const responseText = res.build()
-		const txt = '--> ' + (cmd?.name || 'sendResponse')
-		if (res instanceof TResponse && ErrorCode[res.code]) {
-			this.logger.error({ responseText }, txt)
-		} else {
-			this.logger.info({ responseText }, txt)
-		}
+	sendResponse(
+		code: ResponseCode,
+		paramsOrMessage?: Record<string, unknown> | string,
+		cmd?: DeserializedCommand
+	): void {
+		const responseText = messageForCode(code, paramsOrMessage)
+		const method = ErrorCode[code] ? 'error' : 'info'
+		this.logger[method]({ responseText, cmd }, '--> send response to client')
 		this.socket.write(responseText)
 	}
 
 	notify(type: NotifyType, params: Record<string, string>): void {
 		this.logger.info({ type, params }, 'notify')
 		if (type === NotifyType.Configuration && this.notifySettings.configuration) {
-			this.sendResponse(new TResponse(AsynchronousCode.ConfigurationInfo, params))
+			this.sendResponse(AsynchronousCode.ConfigurationInfo, params)
 		} else if (type === NotifyType.Remote && this.notifySettings.remote) {
-			this.sendResponse(new TResponse(AsynchronousCode.RemoteInfo, params))
+			this.sendResponse(AsynchronousCode.RemoteInfo, params)
 		} else if (type === NotifyType.Slot && this.notifySettings.slot) {
-			this.sendResponse(new TResponse(AsynchronousCode.SlotInfo, params))
+			this.sendResponse(AsynchronousCode.SlotInfo, params)
 		} else if (type === NotifyType.Transport && this.notifySettings.transport) {
-			this.sendResponse(new TResponse(AsynchronousCode.TransportInfo, params))
+			this.sendResponse(AsynchronousCode.TransportInfo, params)
 		}
 	}
 }
