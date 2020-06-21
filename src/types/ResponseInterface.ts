@@ -1,4 +1,4 @@
-import { Hash } from '../types'
+import { Hash, Timecode } from '../types'
 import {
 	TransportStatus,
 	VideoFormat,
@@ -22,8 +22,22 @@ export interface ClipsCount {
 	'clip count': string
 }
 
-export interface ClipsGet extends Hash<string> {
-	'clip count': string
+export interface ClipV1 {
+	name: string
+	startT: Timecode
+	duration: Timecode
+}
+
+export interface ClipV2 {
+	startT: Timecode
+	duration: number
+	inT: Timecode
+	outT: Timecode
+	name: string
+}
+
+export interface ClipsGet {
+	clips: ClipV1[]
 }
 
 export interface TransportInfo {
@@ -58,4 +72,9 @@ export interface Uptime {
 
 export interface Format {
 	token: string // @todo: is broken in hyperdeck
+}
+
+export interface RemoteInfoResponse {
+	enabled: boolean
+	override: boolean
 }

@@ -1,6 +1,6 @@
 {
 	"extends": "./config/tsconfig.base.json",
-	"include": ["src/**/*.spec.ts"],
+	"include": ["src/**/__tests__/*.spec.ts"],
 	"compilerOptions": {
 		"rootDir": "src",
 		"types": ["node", "jest"]

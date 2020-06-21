@@ -1,7 +1,6 @@
-import * as util from 'util'
-
 import * as DeserializedCommands from './types/DeserializedCommands'
 import * as ResponseInterface from './types/ResponseInterface'
+import { invariant } from './invariant'
 export { DeserializedCommands, ResponseInterface }
 
 export const CRLF = '\r\n'
@@ -24,42 +23,47 @@ export interface Buildable {
 	build(): string
 }
 
-export class TResponse<P extends Record<string, any> = Record<string, any>> implements Buildable {
-	constructor(public code: ResponseCode, public params?: P) {
+export class TResponse<T extends Record<string, any> = Record<string, any>> implements Buildable {
+	constructor(public code: ResponseCode, public params?: T) {
+		invariant(responseNamesByCode.hasOwnProperty(code), 'Invalid code: `%o`', code)
 		this.name = responseNamesByCode[code]
 	}
 
 	public name: string
 
-	public build(): string {
-		let data = util.format('%d %s', this.code, this.name)
+	public build = (): string => messageForCode(this.code, this.params)
+}
 
-		if (this.params) {
-			data += ':' + CRLF
-			for (const [key, value] of Object.entries(this.params)) {
-				if (!value) {
-					continue
-				}
-				data += util.format('%s: %s', key, value) + CRLF
-			}
-		}
+export const formatClipsGetResponse = (
+	res: ResponseInterface.ClipsGet
+): Record<string, string | number> => {
+	const clipsCount = res.clips.length
 
-		data += CRLF
-
-		return data
+	const response: Record<string, string | number> = {
+		clipsCount
 	}
+
+	for (let idx = 0; idx < clipsCount; idx++) {
+		const clip = res.clips[idx]
+		const clipKey = (idx + 1).toString()
+		response[clipKey] = `${clip.name} ${clip.startT} ${clip.duration}`
+	}
+
+	return response
 }
 
 export class ErrorResponse implements Buildable {
-	constructor(public code: ResponseCode, public message: string) {}
+	constructor(public code: ResponseCode, public message: string) {
+		invariant(responseNamesByCode.hasOwnProperty(code), 'Invalid code: `%o`', code)
+	}
 
-	public build = (): string => util.format('%d %s', this.code, this.message)
+	public build = (): string => this.code + ' ' + this.message + CRLF
 }
 
 export interface DeserializedCommand {
 	raw: string
 	name: string
-	parameters: { [key: string]: string | undefined }
+	parameters: Record<string, string | undefined>
 }
 
 export type ResponseCode = ErrorCode | SynchronousCode | AsynchronousCode
@@ -180,6 +184,66 @@ export const responseNamesByCode: Record<ResponseCode, string> = {
 	[SynchronousCode.SlotInfo]: CommandNames.SlotInfoCommand,
 	[SynchronousCode.TransportInfo]: CommandNames.TransportInfoCommand,
 	[SynchronousCode.Uptime]: CommandNames.UptimeCommand
+}
+
+export class Timecode {
+	constructor(hh: number, mm: number, ss: number, ff: number) {
+		this._timecode = [hh, mm, ss, ff]
+			.map((code) => {
+				const codeInt = Math.floor(code)
+				if (codeInt !== code || code < 0 || code > 99) {
+					throw new Error('Timecode params must be an integer between 0 and 99')
+				}
+				// turn the integer into a potentially zero-prefixed string
+				return (codeInt + 100).toString().slice(-2)
+			})
+			.join(':')
+	}
+
+	private _timecode: string
+
+	public toString(): string {
+		return this._timecode
+	}
+}
+
+export const messageForCode = (code: ResponseCode, params?: Record<string, unknown>): string => {
+	const firstLine = `${code} ${responseNamesByCode[code]}`
+
+	// bail if no params
+	if (!params) {
+		return firstLine + CRLF
+	}
+
+	// filter out params with null/undefined values
+	const paramEntries = Object.entries(params).filter(([, value]) => value != null)
+
+	// bail if no params after filtering
+	if (paramEntries.length === 0) {
+		return firstLine + CRLF
+	}
+
+	// turn the params object into a key/value
+	return (
+		paramEntries.reduce<string>((prev, [key, value]) => {
+			let valueString: string
+
+			if (typeof value === 'string') {
+				valueString = value
+			} else if (typeof value === 'boolean') {
+				valueString = value ? 'true' : 'false'
+			} else if (typeof value === 'number') {
+				valueString = value.toString()
+			} else {
+				throw new Error('Unhandled value type: ' + typeof value)
+			}
+
+			// convert camelCase keys to space-separated words
+			const formattedKey = key.replace(/([a-z])([A-Z]+)/, '$1 $2').toLowerCase()
+
+			return prev + formattedKey + ': ' + valueString + CRLF
+		}, firstLine + ':' + CRLF) + CRLF
+	)
 }
 
 export const ParameterMap = {

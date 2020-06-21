@@ -7,6 +7,8 @@ export {
 	NotifyType,
 	SynchronousCode,
 	FileFormats,
+	SlotStatus,
 	VideoFormat,
-	TransportStatus
+	TransportStatus,
+	Timecode
 } from './types'

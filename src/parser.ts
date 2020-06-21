@@ -6,7 +6,7 @@ export class MultilineParser {
 	private _linesQueue: string[] = []
 
 	constructor(logger: Logger) {
-		this._log = logger.child({ source: 'MultilineParser' })
+		this._log = logger.child({ name: 'MultilineParser' })
 	}
 
 	receivedString(data: string): DeserializedCommand[] {

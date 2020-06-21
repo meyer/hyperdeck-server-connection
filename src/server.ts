@@ -10,7 +10,8 @@ import {
 	NotifyType,
 	ResponseInterface,
 	ErrorResponse,
-	Buildable
+	Buildable,
+	formatClipsGetResponse
 } from './types'
 import { createServer, Server } from 'net'
 import pino from 'pino'
@@ -26,7 +27,7 @@ const noop = async () => {
 export class HyperdeckServer {
 	private logger: pino.Logger
 	private _sockets: { [id: string]: HyperdeckSocket } = {}
-	private _server: Server
+	public readonly _server: Server
 
 	onDeviceInfo: Handler<DeserializedCommand, ResponseInterface.DeviceInfo> = noop
 	onDiskList: Handler<DeserializedCommand, ResponseInterface.DiskList> = noop
@@ -46,7 +47,6 @@ export class HyperdeckServer {
 	onGoTo: Handler<DeserializedCommands.GoToCommand, void> = noop
 	onJog: Handler<DeserializedCommands.JogCommand, void> = noop
 	onShuttle: Handler<DeserializedCommands.ShuttleCommand, void> = noop
-	onRemote: Handler<DeserializedCommands.RemoteCommand, void | Record<string, string>> = noop
 	onConfiguration: Handler<
 		DeserializedCommands.ConfigurationCommand,
 		ResponseInterface.Configuration
@@ -57,17 +57,20 @@ export class HyperdeckServer {
 	onWatchdog: Handler<DeserializedCommands.WatchdogCommand, void> = noop
 
 	constructor(ip?: string, logger = pino()) {
-		this.logger = logger.child({ source: 'HyperDeck Emulator' })
+		this.logger = logger.child({ name: 'HyperDeck Emulator' })
 
 		this._server = createServer((socket) => {
-			this.logger.debug('connection')
+			this.logger.info('connection')
 			const socketId = Math.random().toString(35).substr(-6)
-			this._sockets[socketId] = new HyperdeckSocket(
-				socket,
-				this.logger.child({ source: 'HyperDeck socket ' + socketId }),
-				(cmd) => this._receivedCommand(cmd)
+
+			const socketLogger = this.logger.child({ name: 'HyperDeck socket ' + socketId })
+
+			this._sockets[socketId] = new HyperdeckSocket(socket, socketLogger, (cmd) =>
+				this._receivedCommand(cmd)
 			)
+
 			this._sockets[socketId].on('disconnected', () => {
+				socketLogger.info('disconnected')
 				delete this._sockets[socketId]
 			})
 		})
@@ -98,7 +101,10 @@ export class HyperdeckServer {
 	}
 
 	private async _receivedCommand(cmd: DeserializedCommand): Promise<Buildable> {
-		this.logger.info({ cmd }, '_receivedCommand')
+		// TODO(meyer) more sophisticated debouncing
+		await new Promise((resolve) => setTimeout(() => resolve(), 200))
+
+		this.logger.info({ cmd }, '<-- ' + cmd.name)
 		try {
 			if (cmd.name === CommandNames.DeviceInfoCommand) {
 				const res = await this.onDeviceInfo(cmd)
@@ -146,7 +152,7 @@ export class HyperdeckServer {
 			}
 
 			if (cmd.name === CommandNames.ClipsGetCommand) {
-				const res = await this.onClipsGet(cmd)
+				const res = await this.onClipsGet(cmd).then(formatClipsGetResponse)
 				return new TResponse(SynchronousCode.ClipsInfo, res)
 			}
 
@@ -196,11 +202,10 @@ export class HyperdeckServer {
 			}
 
 			if (cmd.name === CommandNames.RemoteCommand) {
-				const res = await this.onRemote(cmd)
-				if (!res) {
-					return new TResponse(SynchronousCode.OK)
-				}
-				return new TResponse(SynchronousCode.Remote, res)
+				return new TResponse(SynchronousCode.Remote, {
+					enabled: true,
+					override: false
+				})
 			}
 
 			if (cmd.name === CommandNames.ConfigurationCommand) {
@@ -242,13 +247,16 @@ export class HyperdeckServer {
 			throw new Error('Unhandled command name: ' + cmd.name)
 		} catch (err) {
 			if (err instanceof UnimplementedError) {
+				this.logger.error({ cmd }, 'unimplemented')
 				return new TResponse(ErrorCode.Unsupported)
 			}
 
 			if (err && typeof err.code === 'number' && ErrorCode[err.code] && err.msg) {
+				this.logger.error({ err }, 'error with code')
 				return new ErrorResponse(err.code, err.msg)
 			}
 
+			this.logger.error({ cmd }, 'internal error')
 			return new TResponse(ErrorCode.InternalError)
 		}
 	}
