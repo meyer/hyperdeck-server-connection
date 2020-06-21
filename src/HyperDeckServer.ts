@@ -1,18 +1,17 @@
-import { HyperdeckSocket } from './socket'
+import { HyperDeckSocket } from './socket'
 import {
 	DeserializedCommand,
-	DeserializedCommands,
-	Hash,
-	TResponse,
 	SynchronousCode,
 	CommandNames,
 	ErrorCode,
 	NotifyType,
-	ResponseInterface,
-	ErrorResponse,
-	Buildable,
-	formatClipsGetResponse
+	Buildable
 } from './types'
+import * as ResponseInterface from './types/ResponseInterface'
+import * as DeserializedCommands from './types/DeserializedCommands'
+import { formatClipsGetResponse } from './formatClipsGetResponse'
+import { ErrorResponse } from './ErrorResponse'
+import { TResponse } from './TResponse'
 import { createServer, Server } from 'net'
 import pino from 'pino'
 
@@ -24,10 +23,10 @@ const noop = async () => {
 	throw new UnimplementedError()
 }
 
-export class HyperdeckServer {
+export class HyperDeckServer {
 	private logger: pino.Logger
-	private _sockets: { [id: string]: HyperdeckSocket } = {}
-	public readonly _server: Server
+	private sockets: { [id: string]: HyperDeckSocket } = {}
+	private server: Server
 
 	onDeviceInfo: Handler<DeserializedCommand, ResponseInterface.DeviceInfo> = noop
 	onDiskList: Handler<DeserializedCommand, ResponseInterface.DiskList> = noop
@@ -59,48 +58,48 @@ export class HyperdeckServer {
 	constructor(ip?: string, logger = pino()) {
 		this.logger = logger.child({ name: 'HyperDeck Emulator' })
 
-		this._server = createServer((socket) => {
+		this.server = createServer((socket) => {
 			this.logger.info('connection')
 			const socketId = Math.random().toString(35).substr(-6)
 
 			const socketLogger = this.logger.child({ name: 'HyperDeck socket ' + socketId })
 
-			this._sockets[socketId] = new HyperdeckSocket(socket, socketLogger, (cmd) =>
-				this._receivedCommand(cmd)
+			this.sockets[socketId] = new HyperDeckSocket(socket, socketLogger, (cmd) =>
+				this.receivedCommand(cmd)
 			)
 
-			this._sockets[socketId].on('disconnected', () => {
+			this.sockets[socketId].on('disconnected', () => {
 				socketLogger.info('disconnected')
-				delete this._sockets[socketId]
+				delete this.sockets[socketId]
 			})
 		})
 
-		this._server.on('listening', () => this.logger.info('listening'))
-		this._server.on('close', () => this.logger.info('connection closed'))
-		this._server.on('error', (err) => this.logger.error('server error:', err))
-		this._server.maxConnections = 1
-		this._server.listen(9993, ip)
+		this.server.on('listening', () => this.logger.info('listening'))
+		this.server.on('close', () => this.logger.info('connection closed'))
+		this.server.on('error', (err) => this.logger.error('server error:', err))
+		this.server.maxConnections = 1
+		this.server.listen(9993, ip)
 	}
 
 	close(): void {
-		this._server.unref()
+		this.server.unref()
 	}
 
-	notifySlot(params: Hash<string>): void {
-		this._notify(NotifyType.Slot, params)
+	notifySlot(params: Record<string, string>): void {
+		this.notify(NotifyType.Slot, params)
 	}
 
-	notifyTransport(params: Hash<string>): void {
-		this._notify(NotifyType.Transport, params)
+	notifyTransport(params: Record<string, string>): void {
+		this.notify(NotifyType.Transport, params)
 	}
 
-	private _notify(type: NotifyType, params: Hash<string>): void {
-		for (const id of Object.keys(this._sockets)) {
-			this._sockets[id].notify(type, params)
+	private notify(type: NotifyType, params: Record<string, string>): void {
+		for (const id of Object.keys(this.sockets)) {
+			this.sockets[id].notify(type, params)
 		}
 	}
 
-	private async _receivedCommand(cmd: DeserializedCommand): Promise<Buildable> {
+	private async receivedCommand(cmd: DeserializedCommand): Promise<Buildable> {
 		// TODO(meyer) more sophisticated debouncing
 		await new Promise((resolve) => setTimeout(() => resolve(), 200))
 

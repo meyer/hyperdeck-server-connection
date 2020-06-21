@@ -1,39 +1,38 @@
 import type { Socket } from 'net'
 import { EventEmitter } from 'events'
 import {
-	TResponse,
 	AsynchronousCode,
 	DeserializedCommand,
 	ErrorCode,
 	CommandNames,
-	DeserializedCommands,
 	NotifyType,
-	Hash,
 	SynchronousCode,
 	Buildable
 } from './types'
-import { MultilineParser } from './parser'
+import * as DeserializedCommands from './types/DeserializedCommands'
+import { TResponse } from './TResponse'
+import { MultilineParser } from './MultilineParser'
 import type { Logger } from 'pino'
 
-export class HyperdeckSocket extends EventEmitter {
+export class HyperDeckSocket extends EventEmitter {
 	constructor(
-		private _socket: Socket,
+		private socket: Socket,
 		private logger: Logger,
-		private _receivedCommand: (cmd: DeserializedCommand) => Promise<Buildable>
+		private receivedCommand: (cmd: DeserializedCommand) => Promise<Buildable>
 	) {
 		super()
 
-		this._parser = new MultilineParser(logger)
+		this.parser = new MultilineParser(logger)
 
-		this._socket.setEncoding('utf-8')
+		this.socket.setEncoding('utf-8')
 
-		this._socket.on('data', (data: string) => {
-			this._onMessage(data)
+		this.socket.on('data', (data: string) => {
+			this.onMessage(data)
 		})
 
-		this._socket.on('error', () => {
+		this.socket.on('error', () => {
 			logger.info('error')
-			this._socket.destroy()
+			this.socket.destroy()
 			this.emit('disconnected')
 			logger.info('disconnected')
 		})
@@ -41,16 +40,16 @@ export class HyperdeckSocket extends EventEmitter {
 		this.sendResponse(
 			new TResponse(AsynchronousCode.ConnectionInfo, {
 				'protocol version': '1.11',
-				model: 'NodeJS Hyperdeck Server Library'
+				model: 'NodeJS HyperDeck Server Library'
 			})
 		)
 	}
 
-	private _parser: MultilineParser
-	private _lastReceived = -1
-	private _watchdogTimer: NodeJS.Timer | null = null
+	private parser: MultilineParser
+	private lastReceivedMS = -1
+	private watchdogTimer: NodeJS.Timer | null = null
 
-	private _notifySettings = {
+	private notifySettings = {
 		slot: false,
 		transport: false,
 		remote: false,
@@ -58,30 +57,30 @@ export class HyperdeckSocket extends EventEmitter {
 		'dropped frames': false // @todo: implement
 	}
 
-	private _onMessage(data: string): void {
+	private onMessage(data: string): void {
 		this.logger.info({ data }, 'onMessage')
 
-		this._lastReceived = Date.now()
+		this.lastReceivedMS = Date.now()
 
-		const cmds = this._parser.receivedString(data)
+		const cmds = this.parser.receivedString(data)
 		this.logger.info({ cmds }, 'commands')
 
 		for (const cmd of cmds) {
 			// special cases
 			if (cmd.name === CommandNames.WatchdogCommand) {
-				if (this._watchdogTimer) clearInterval(this._watchdogTimer)
+				if (this.watchdogTimer) clearInterval(this.watchdogTimer)
 
 				const watchdogCmd = cmd as DeserializedCommands.WatchdogCommand
 				if (watchdogCmd.parameters.period) {
-					this._watchdogTimer = setInterval(() => {
+					this.watchdogTimer = setInterval(() => {
 						if (
-							Date.now() - this._lastReceived >
+							Date.now() - this.lastReceivedMS >
 							Number(watchdogCmd.parameters.period)
 						) {
-							this._socket.destroy()
+							this.socket.destroy()
 							this.emit('disconnected')
-							if (this._watchdogTimer) {
-								clearInterval(this._watchdogTimer)
+							if (this.watchdogTimer) {
+								clearInterval(this.watchdogTimer)
 							}
 						}
 					}, Number(watchdogCmd.parameters.period) * 1000)
@@ -93,16 +92,16 @@ export class HyperdeckSocket extends EventEmitter {
 					for (const param of Object.keys(notifyCmd.parameters) as Array<
 						keyof typeof notifyCmd.parameters
 					>) {
-						if (this._notifySettings[param] !== undefined) {
-							this._notifySettings[param] = notifyCmd.parameters[param] === 'true'
+						if (this.notifySettings[param] !== undefined) {
+							this.notifySettings[param] = notifyCmd.parameters[param] === 'true'
 						}
 					}
 				} else {
-					const settings: Hash<string> = {}
-					for (const key of Object.keys(this._notifySettings) as Array<
-						keyof HyperdeckSocket['_notifySettings']
+					const settings: Record<string, string> = {}
+					for (const key of Object.keys(this.notifySettings) as Array<
+						keyof HyperDeckSocket['notifySettings']
 					>) {
-						settings[key] = this._notifySettings[key] ? 'true' : 'false'
+						settings[key] = this.notifySettings[key] ? 'true' : 'false'
 					}
 					this.sendResponse(new TResponse(SynchronousCode.Notify, settings), cmd)
 
@@ -110,7 +109,7 @@ export class HyperdeckSocket extends EventEmitter {
 				}
 			}
 
-			this._receivedCommand(cmd).then(
+			this.receivedCommand(cmd).then(
 				(res) => this.sendResponse(res, cmd),
 				// not implemented by client code:
 				() => this.sendResponse(new TResponse(ErrorCode.Unsupported), cmd)
@@ -126,18 +125,18 @@ export class HyperdeckSocket extends EventEmitter {
 		} else {
 			this.logger.info({ responseText }, txt)
 		}
-		this._socket.write(responseText)
+		this.socket.write(responseText)
 	}
 
-	notify(type: NotifyType, params: Hash<string>): void {
+	notify(type: NotifyType, params: Record<string, string>): void {
 		this.logger.info({ type, params }, 'notify')
-		if (type === NotifyType.Configuration && this._notifySettings.configuration) {
+		if (type === NotifyType.Configuration && this.notifySettings.configuration) {
 			this.sendResponse(new TResponse(AsynchronousCode.ConfigurationInfo, params))
-		} else if (type === NotifyType.Remote && this._notifySettings.remote) {
+		} else if (type === NotifyType.Remote && this.notifySettings.remote) {
 			this.sendResponse(new TResponse(AsynchronousCode.RemoteInfo, params))
-		} else if (type === NotifyType.Slot && this._notifySettings.slot) {
+		} else if (type === NotifyType.Slot && this.notifySettings.slot) {
 			this.sendResponse(new TResponse(AsynchronousCode.SlotInfo, params))
-		} else if (type === NotifyType.Transport && this._notifySettings.transport) {
+		} else if (type === NotifyType.Transport && this.notifySettings.transport) {
 			this.sendResponse(new TResponse(AsynchronousCode.TransportInfo, params))
 		}
 	}

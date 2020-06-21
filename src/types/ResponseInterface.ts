@@ -1,11 +1,11 @@
-import { Hash, Timecode } from '../types'
-import {
+import type { Timecode } from '../Timecode'
+import type {
 	TransportStatus,
 	VideoFormat,
 	SlotStatus,
-	AudioInputs,
+	AudioInput,
 	VideoInputs,
-	FileFormats
+	FileFormat
 } from '../types'
 
 export interface DeviceInfo {
@@ -14,7 +14,7 @@ export interface DeviceInfo {
 	'slot count': string
 }
 
-export interface DiskList extends Hash<string> {
+export interface DiskList extends Record<string, string> {
 	'slot id': string
 }
 
@@ -61,9 +61,9 @@ export interface SlotInfo {
 }
 
 export interface Configuration {
-	'audio input': AudioInputs
+	'audio input': AudioInput
 	'video input': VideoInputs
-	'file format': FileFormats
+	'file format': FileFormat
 }
 
 export interface Uptime {

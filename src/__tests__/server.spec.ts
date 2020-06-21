@@ -53,18 +53,17 @@ describe('HyperdeckServer', () => {
 			}
 		})
 
-		const server = await import('../server')
-		const hyperdeck = new server.HyperdeckServer('0.0.0.0', logger)
-		const socketEntries = Object.entries(hyperdeck['_sockets'])
+		const server = await import('../HyperDeckServer')
+		const hyperdeck = new server.HyperDeckServer('0.0.0.0', logger)
+		const socketEntries = Object.entries(hyperdeck['sockets'])
 		expect(socketEntries.length).toBe(1)
 		const hyperdeckSocket = socketEntries[0][1]
-		const socket = hyperdeckSocket['_socket']
+		const socket = hyperdeckSocket['socket']
 
 		socket.emit('data', 'banana')
 
 		hyperdeck.close()
 
-		// wait half a second
 		await new Promise((resolve) => setTimeout(() => resolve(), 500))
 
 		expect((socket.write as jest.Mock).mock.calls).toMatchInlineSnapshot(`
@@ -72,7 +71,7 @@ describe('HyperdeckServer', () => {
 		  Array [
 		    "500 connection info:
 		protocol version: 1.11
-		model: NodeJS Hyperdeck Server Library
+		model: NodeJS HyperDeck Server Library
 
 		",
 		  ],
@@ -94,7 +93,7 @@ describe('HyperdeckServer', () => {
 		    "msg": "--> sendResponse",
 		    "responseText": "500 connection info:
 		protocol version: 1.11
-		model: NodeJS Hyperdeck Server Library
+		model: NodeJS HyperDeck Server Library
 
 		",
 		  },

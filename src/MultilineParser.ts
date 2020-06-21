@@ -1,12 +1,12 @@
-import { DeserializedCommand, Hash, ParameterMap } from './types'
+import { DeserializedCommand, ParameterMap } from './types'
 import { Logger } from 'pino'
 
 export class MultilineParser {
-	private _log: Logger
-	private _linesQueue: string[] = []
+	private logger: Logger
+	private linesQueue: string[] = []
 
 	constructor(logger: Logger) {
-		this._log = logger.child({ name: 'MultilineParser' })
+		this.logger = logger.child({ name: 'MultilineParser' })
 	}
 
 	receivedString(data: string): DeserializedCommand[] {
@@ -18,34 +18,34 @@ export class MultilineParser {
 		// remove the blank line at the end from the intentionally trailing \r\n
 		if (newLines.length > 0 && newLines[newLines.length - 1] === '') newLines.pop()
 
-		this._linesQueue = this._linesQueue.concat(newLines)
+		this.linesQueue = this.linesQueue.concat(newLines)
 
-		while (this._linesQueue.length > 0) {
+		while (this.linesQueue.length > 0) {
 			// skip any blank lines
-			if (this._linesQueue[0] === '') {
-				this._linesQueue.shift()
+			if (this.linesQueue[0] === '') {
+				this.linesQueue.shift()
 				continue
 			}
 
 			// if the first line has no colon, then it is a single line command
 			if (
-				this._linesQueue[0].indexOf(':') === -1 ||
-				(this._linesQueue.length === 1 && this._linesQueue[0].indexOf(':') > 0)
+				this.linesQueue[0].indexOf(':') === -1 ||
+				(this.linesQueue.length === 1 && this.linesQueue[0].indexOf(':') > 0)
 			) {
-				const r = this.parseResponse(this._linesQueue.splice(0, 1))
+				const r = this.parseResponse(this.linesQueue.splice(0, 1))
 				if (r) {
 					res.push(r)
 				}
 				continue
 			}
 
-			const endLine = this._linesQueue.indexOf('')
+			const endLine = this.linesQueue.indexOf('')
 			if (endLine === -1) {
 				// Not got full response yet
 				break
 			}
 
-			const lines = this._linesQueue.splice(0, endLine + 1)
+			const lines = this.linesQueue.splice(0, endLine + 1)
 			const r = this.parseResponse(lines)
 			if (r) res.push(r)
 		}
@@ -62,7 +62,7 @@ export class MultilineParser {
 			const msg = bits.shift() as keyof typeof ParameterMap
 			if (!msg) throw new Error('Unrecognised command')
 
-			const params: Hash<string> = {}
+			const params: Record<string, string> = {}
 			const paramNames = new Set(ParameterMap[msg])
 			let param = bits.shift()
 			if (!param) throw new Error('No named parameters found')
@@ -94,18 +94,18 @@ export class MultilineParser {
 		} else {
 			const headerMatch = lines[0].match(/(.+?)(:|)$/im)
 			if (!headerMatch) {
-				this._log.error({ header: lines[0] }, 'failed to parse header')
+				this.logger.error({ header: lines[0] }, 'failed to parse header')
 				return null
 			}
 
 			const msg = headerMatch[1]
 
-			const params: Hash<string> = {}
+			const params: Record<string, string> = {}
 
 			for (let i = 1; i < lines.length; i++) {
 				const lineMatch = lines[i].match(/^(.*?): (.*)$/im)
 				if (!lineMatch) {
-					this._log.error({ line: lines[i] }, 'failed to parse line')
+					this.logger.error({ line: lines[i] }, 'failed to parse line')
 					continue
 				}
 

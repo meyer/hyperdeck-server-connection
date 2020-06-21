@@ -1,14 +1,4 @@
-export * from './server'
-
-export {
-	ResponseInterface,
-	ErrorCode,
-	AsynchronousCode,
-	NotifyType,
-	SynchronousCode,
-	FileFormats,
-	SlotStatus,
-	VideoFormat,
-	TransportStatus,
-	Timecode
-} from './types'
+export * from './HyperDeckServer'
+export * from './types'
+export * from './Timecode'
+export * as ResponseInterface from './types/ResponseInterface'

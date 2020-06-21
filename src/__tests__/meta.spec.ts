@@ -36,23 +36,37 @@ describe('npm publish', () => {
 		- CHANGELOG.md
 		- LICENSE
 		- README.md
+		- dist/constants.d.ts
+		- dist/constants.d.ts.map
+		- dist/ErrorResponse.d.ts
+		- dist/ErrorResponse.d.ts.map
+		- dist/formatClipsGetResponse.d.ts
+		- dist/formatClipsGetResponse.d.ts.map
 		- dist/hyperdeck-emulator.cjs.development.js
 		- dist/hyperdeck-emulator.cjs.development.js.map
 		- dist/hyperdeck-emulator.cjs.production.min.js
 		- dist/hyperdeck-emulator.cjs.production.min.js.map
 		- dist/hyperdeck-emulator.esm.js
 		- dist/hyperdeck-emulator.esm.js.map
+		- dist/HyperDeckServer.d.ts
+		- dist/HyperDeckServer.d.ts.map
+		- dist/HyperDeckSocket.d.ts
+		- dist/HyperDeckSocket.d.ts.map
 		- dist/index.d.ts
 		- dist/index.d.ts.map
 		- dist/index.js
 		- dist/invariant.d.ts
 		- dist/invariant.d.ts.map
-		- dist/parser.d.ts
-		- dist/parser.d.ts.map
-		- dist/server.d.ts
-		- dist/server.d.ts.map
-		- dist/socket.d.ts
-		- dist/socket.d.ts.map
+		- dist/messageForCode.d.ts
+		- dist/messageForCode.d.ts.map
+		- dist/MultilineParser.d.ts
+		- dist/MultilineParser.d.ts.map
+		- dist/state.d.ts
+		- dist/state.d.ts.map
+		- dist/Timecode.d.ts
+		- dist/Timecode.d.ts.map
+		- dist/TResponse.d.ts
+		- dist/TResponse.d.ts.map
 		- dist/types.d.ts
 		- dist/types.d.ts.map
 		- dist/types/DeserializedCommands.d.ts
@@ -61,11 +75,17 @@ describe('npm publish', () => {
 		- dist/types/ResponseInterface.d.ts.map
 		- src/__tests__/meta.spec.ts
 		- src/__tests__/server.spec.ts
+		- src/constants.ts
+		- src/ErrorResponse.ts
+		- src/formatClipsGetResponse.ts
+		- src/HyperDeckServer.ts
 		- src/index.ts
 		- src/invariant.ts
-		- src/parser.ts
-		- src/server.ts
+		- src/messageForCode.ts
+		- src/MultilineParser.ts
 		- src/socket.ts
+		- src/Timecode.ts
+		- src/TResponse.ts
 		- src/types.ts
 		- src/types/DeserializedCommands.ts
 		- src/types/ResponseInterface.ts
