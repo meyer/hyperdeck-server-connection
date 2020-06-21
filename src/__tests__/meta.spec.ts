@@ -45,6 +45,8 @@ describe('npm publish', () => {
 		- dist/index.d.ts
 		- dist/index.d.ts.map
 		- dist/index.js
+		- dist/invariant.d.ts
+		- dist/invariant.d.ts.map
 		- dist/parser.d.ts
 		- dist/parser.d.ts.map
 		- dist/server.d.ts
@@ -58,7 +60,9 @@ describe('npm publish', () => {
 		- dist/types/ResponseInterface.d.ts
 		- dist/types/ResponseInterface.d.ts.map
 		- src/__tests__/meta.spec.ts
+		- src/__tests__/server.spec.ts
 		- src/index.ts
+		- src/invariant.ts
 		- src/parser.ts
 		- src/server.ts
 		- src/socket.ts
