@@ -65,7 +65,7 @@ export class HyperDeckSocket extends EventEmitter {
 		transport: false,
 		remote: false,
 		configuration: false,
-		'dropped frames': false // @todo: implement
+		'dropped frames': false
 	}
 
 	private onMessage(data: string): void {

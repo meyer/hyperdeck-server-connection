@@ -50,6 +50,6 @@ describe('messageForCode', () => {
 	it('throws an error if a non-primitive param type is encountered', () => {
 		expect(() =>
 			messageForCode(SynchronousCode.OK, { param1: { hmmm: true } })
-		).toThrowErrorMatchingInlineSnapshot(`"Unhandled value type: object"`)
+		).toThrowErrorMatchingInlineSnapshot(`"Unhandled value type: \`object\`"`)
 	})
 })

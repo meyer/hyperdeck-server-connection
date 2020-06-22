@@ -1,6 +1,7 @@
 import type { DeserializedCommand } from './types'
-import { parametersByCommandName } from './constants'
+import { parametersByCommandName, CRLF } from './constants'
 import type { Logger } from 'pino'
+import { invariant } from './invariant'
 
 export class MultilineParser {
 	private logger: Logger
@@ -10,11 +11,11 @@ export class MultilineParser {
 		this.logger = logger.child({ name: 'MultilineParser' })
 	}
 
-	receivedString(data: string): DeserializedCommand[] {
+	public receivedString(data: string): DeserializedCommand[] {
 		const res: DeserializedCommand[] = []
 
 		// add new lines to processing queue
-		const newLines = data.split('\r\n')
+		const newLines = data.split(CRLF)
 
 		// remove the blank line at the end from the intentionally trailing \r\n
 		if (newLines.length > 0 && newLines[newLines.length - 1] === '') newLines.pop()
@@ -30,12 +31,12 @@ export class MultilineParser {
 
 			// if the first line has no colon, then it is a single line command
 			if (
-				this.linesQueue[0].indexOf(':') === -1 ||
-				(this.linesQueue.length === 1 && this.linesQueue[0].indexOf(':') > 0)
+				!this.linesQueue[0].includes(':') ||
+				(this.linesQueue.length === 1 && this.linesQueue[0].includes(':'))
 			) {
-				const r = this.parseResponse(this.linesQueue.splice(0, 1))
-				if (r) {
-					res.push(r)
+				const parsedResponse = this.parseResponse(this.linesQueue.splice(0, 1))
+				if (parsedResponse) {
+					res.push(parsedResponse)
 				}
 				continue
 			}
@@ -48,27 +49,31 @@ export class MultilineParser {
 
 			const lines = this.linesQueue.splice(0, endLine + 1)
 			const r = this.parseResponse(lines)
-			if (r) res.push(r)
+			if (r) {
+				res.push(r)
+			}
 		}
 
 		return res
 	}
 
-	parseResponse(lines: string[]): DeserializedCommand | null {
-		lines = lines.map((l) => l.trim())
+	private parseResponse(responseLines: string[]): DeserializedCommand | null {
+		const lines = responseLines.map((l) => l.trim())
 
-		if (lines.length === 1 && lines[0].indexOf(':') > -1) {
+		if (lines.length === 1 && lines[0].includes(':')) {
 			const bits = lines[0].split(': ')
 
 			const msg = bits.shift() as keyof typeof parametersByCommandName
-			if (!msg) throw new Error('Unrecognised command')
+			invariant(msg, 'Unrecognised command')
 
 			const params: Record<string, string> = {}
 			const paramNames = new Set(parametersByCommandName[msg])
 			let param = bits.shift()
-			if (!param) throw new Error('No named parameters found')
+			invariant(param, 'No named parameters found')
+
 			for (let i = 0; i < bits.length - 1; i++) {
-				const bobs = bits[i].split(' ')
+				const bit = bits[i]
+				const bobs = bit.split(' ')
 
 				let nextParam = ''
 				for (let i = bobs.length - 1; i >= 0; i--) {
@@ -78,17 +83,20 @@ export class MultilineParser {
 					}
 				}
 
-				if (!bobs.length) {
-					throw new Error('Command malformed / paramName not recognised')
-				}
+				invariant(
+					bobs.length > 0,
+					'Command malformed / paramName not recognised: `%s`',
+					bit
+				)
 
 				params[param] = bobs.join(' ')
 				param = nextParam
 			}
+
 			params[param] = bits[bits.length - 1]
 
 			return {
-				raw: lines.join('\r\n'),
+				raw: lines.join(CRLF),
 				name: msg,
 				parameters: params
 			}
@@ -114,7 +122,7 @@ export class MultilineParser {
 			}
 
 			const res: DeserializedCommand = {
-				raw: lines.join('\r\n'),
+				raw: lines.join(CRLF),
 				name: msg,
 				parameters: params
 			}

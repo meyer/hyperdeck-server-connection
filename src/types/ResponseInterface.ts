@@ -67,11 +67,11 @@ export interface Configuration {
 }
 
 export interface Uptime {
-	uptime: string // @todo: is broken in hyperdeck
+	uptime: string
 }
 
 export interface Format {
-	token: string // @todo: is broken in hyperdeck
+	token: string
 }
 
 export interface RemoteInfoResponse {

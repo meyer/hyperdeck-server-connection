@@ -1,6 +1,7 @@
 import type { Socket } from 'net'
 import { EventEmitter } from 'events'
 import { getTestLogger } from './utils'
+import { invariant } from '../invariant'
 
 const noop = (): any => {
 	return
@@ -15,9 +16,7 @@ class MockSocket extends EventEmitter implements Pick<Socket, 'destroy' | 'setEn
 jest.mock('net', () => ({
 	createServer: (connectionListener?: (socket: MockSocket) => void) => {
 		const mockSocket = new MockSocket()
-		if (!connectionListener) {
-			throw new Error('Missing connectionListener')
-		}
+		invariant(connectionListener, 'Missing connectionListener')
 		connectionListener(mockSocket)
 		return {
 			listen: noop,
@@ -113,7 +112,7 @@ describe('HyperdeckServer', () => {
 		      "parameters": Object {},
 		      "raw": "banana",
 		    },
-		    "err": "Unhandled command name: banana",
+		    "err": "Unhandled command name: \`banana\`",
 		    "level": 50,
 		    "msg": "unhandled command name",
 		  },

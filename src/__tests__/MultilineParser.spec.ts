@@ -68,7 +68,7 @@ describe('MultilineParser', () => {
 				'notifyyyy: transporttttt: true slottttttttt: true remoteeeeee: true configurationnnn: false'
 			)
 		expect(parseMe).toThrowErrorMatchingInlineSnapshot(
-			`"Command malformed / paramName not recognised"`
+			`"Command malformed / paramName not recognised: \`true slottttttttt\`"`
 		)
 	})
 

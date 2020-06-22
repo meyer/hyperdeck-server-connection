@@ -6,6 +6,7 @@ import * as DeserializedCommands from './types/DeserializedCommands'
 import { formatClipsGetResponse } from './formatClipsGetResponse'
 import { createServer, Server } from 'net'
 import pino from 'pino'
+import { invariant } from './invariant'
 
 type Handler<C extends DeserializedCommand, R extends any> = (command: C) => Promise<R>
 
@@ -238,7 +239,7 @@ export class HyperDeckServer {
 				return SynchronousCode.OK
 			}
 
-			throw new Error('Unhandled command name: ' + cmd.name)
+			invariant(false, 'Unhandled command name: `%s`', cmd.name)
 		} catch (err) {
 			if (err instanceof UnimplementedError) {
 				this.logger.error({ cmd }, 'unimplemented')

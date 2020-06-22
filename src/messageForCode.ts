@@ -1,5 +1,6 @@
 import { CRLF } from './constants'
 import { ResponseCode, responseNamesByCode } from './types'
+import { invariant } from './invariant'
 
 // escape CR/LF and remove colons
 const sanitiseMessage = (input: string): string => {
@@ -42,7 +43,7 @@ export const messageForCode = (
 			} else if (typeof value === 'number') {
 				valueString = value.toString()
 			} else {
-				throw new Error('Unhandled value type: ' + typeof value)
+				invariant(false, 'Unhandled value type: `%s`', typeof value)
 			}
 
 			// convert camelCase keys to space-separated words
