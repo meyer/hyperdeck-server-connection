@@ -42,6 +42,8 @@ describe('npm publish', () => {
 		- dist/constants.d.ts.map
 		- dist/formatClipsGetResponse.d.ts
 		- dist/formatClipsGetResponse.d.ts.map
+		- dist/getEventHandler.d.ts
+		- dist/getEventHandler.d.ts.map
 		- dist/hyperdeck-emulator.cjs.development.js
 		- dist/hyperdeck-emulator.cjs.development.js.map
 		- dist/hyperdeck-emulator.cjs.production.min.js
