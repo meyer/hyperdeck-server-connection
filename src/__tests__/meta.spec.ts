@@ -76,6 +76,7 @@ describe('npm publish', () => {
 		- src/__tests__/utils.ts
 		- src/constants.ts
 		- src/formatClipsGetResponse.ts
+		- src/getEventHandler.ts
 		- src/HyperDeckServer.ts
 		- src/HyperDeckSocket.ts
 		- src/index.ts
