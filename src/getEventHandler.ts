@@ -1,6 +1,6 @@
 import { Timecode } from './Timecode'
 import { VideoFormat } from './types'
-import { invariant } from '../dist/invariant'
+import { invariant } from './invariant'
 
 type ArgStringTypes = Record<string, keyof TypesByStringKey>
 

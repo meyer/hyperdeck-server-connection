@@ -43,19 +43,13 @@ jobs:
         env:
           CI: true
 
-      - name: Test
+      - name: Build and test
         run: yarn test --ci --coverage --maxWorkers=2
         env:
           CI: true
 
-      # this step must run before `yarn build` and after `yarn test`
       - name: Bump canary version
         run: yarn run bump-canary-version
-
-      - name: Build
-        run: yarn build
-        env:
-          CI: true
 
       - name: Configure NPM
         run: |
