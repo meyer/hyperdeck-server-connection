@@ -83,11 +83,7 @@ export class MultilineParser {
 					}
 				}
 
-				invariant(
-					bobs.length > 0,
-					'Command malformed / paramName not recognised: `%s`',
-					bit
-				)
+				invariant(bobs.length > 0, 'Command malformed / paramName not recognised: `%s`', bit)
 
 				params[param] = bobs.join(' ')
 				param = nextParam

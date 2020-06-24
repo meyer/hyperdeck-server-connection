@@ -90,8 +90,7 @@ describe('MultilineParser', () => {
 		]
   `)
 
-		expect(parser.parse('configuration: video input: SDI audio input: XLR'))
-			.toMatchInlineSnapshot(`
+		expect(parser.parse('configuration: video input: SDI audio input: XLR')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "configuration",

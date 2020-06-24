@@ -84,10 +84,7 @@ export class HyperDeckSocket extends EventEmitter {
 				const watchdogCmd = cmd as DeserializedCommands.WatchdogCommand
 				if (watchdogCmd.parameters.period) {
 					this.watchdogTimer = setInterval(() => {
-						if (
-							Date.now() - this.lastReceivedMS >
-							Number(watchdogCmd.parameters.period)
-						) {
+						if (Date.now() - this.lastReceivedMS > Number(watchdogCmd.parameters.period)) {
 							this.socket.destroy()
 							this.emit('disconnected')
 							if (this.watchdogTimer) {
