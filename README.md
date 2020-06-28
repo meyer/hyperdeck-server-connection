@@ -27,23 +27,23 @@ If you want to make a contribution, feel free to open a PR.
 ## Usage
 
 ```javascript
-const { HyperdeckServer } = require('../dist/server')
-const myHyperdeck = new Hyperdeck()
+const { HyperdeckServer } = require('../dist/server');
+const myHyperdeck = new Hyperdeck();
 
-const s = new HyperdeckServer()
+const s = new HyperdeckServer();
 s.onPlay = async (cmd) => {
-	console.log('playing', cmd)
-	status.status = 'play'
-	s.notifyTransport({
-		...status,
-		speed: '100',
-		'slot id': '1',
-		'clip id': '1',
-		'single clip': 'true',
-		'video format': '1080i50',
-		loop: false
-	})
-}
+  console.log('playing', cmd);
+  status.status = 'play';
+  s.notifyTransport({
+    ...status,
+    speed: '100',
+    'slot id': '1',
+    'clip id': '1',
+    'single clip': 'true',
+    'video format': '1080i50',
+    loop: false,
+  });
+};
 ```
 
 ## Acknowledgements

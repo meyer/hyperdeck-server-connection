@@ -1,1 +1,1 @@
-export const CRLF = '\r\n'
+export const CRLF = '\r\n';

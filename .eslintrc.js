@@ -2,47 +2,47 @@
 
 /** @type {import('eslint').Linter.Config} */
 module.exports = {
-	extends: ['eslint:recommended', 'plugin:prettier/recommended'],
-	plugins: ['prettier'],
-	rules: {
-		'prettier/prettier': 'error',
-		'no-use-before-define': 'off',
-		'no-prototype-builtins': 'off'
-	},
-	env: {
-		es2017: true,
-		node: true
-	},
-	parserOptions: { sourceType: 'module', ecmaVersion: 2018 },
-	overrides: [
-		{
-			files: ['src/**/*.ts'],
-			parser: '@typescript-eslint/parser',
-			parserOptions: { project: './tsconfig.json' },
-			plugins: ['@typescript-eslint'],
-			extends: [
-				'eslint:recommended',
-				'plugin:@typescript-eslint/eslint-recommended',
-				'plugin:@typescript-eslint/recommended',
-				'prettier/@typescript-eslint'
-			],
-			rules: {
-				'no-use-before-define': 'off',
-				'@typescript-eslint/no-use-before-define': 'off',
-				'@typescript-eslint/explicit-function-return-type': 'off',
-				'@typescript-eslint/no-explicit-any': 'off',
-				'@typescript-eslint/explicit-module-boundary-types': 'off',
-				'@typescript-eslint/no-unused-vars': 'off',
-				'@typescript-eslint/ban-types': 'off',
-				'no-prototype-builtins': 'off'
-			}
-		},
-		{
-			files: ['src/**/__tests__/*.spec.ts'],
-			parserOptions: { project: './tsconfig.jest.json' },
-			env: {
-				jest: true
-			}
-		}
-	]
-}
+  extends: ['eslint:recommended', 'plugin:prettier/recommended'],
+  plugins: ['prettier'],
+  rules: {
+    'prettier/prettier': 'error',
+    'no-use-before-define': 'off',
+    'no-prototype-builtins': 'off',
+  },
+  env: {
+    es2017: true,
+    node: true,
+  },
+  parserOptions: { sourceType: 'module', ecmaVersion: 2018 },
+  overrides: [
+    {
+      files: ['src/**/*.ts'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: { project: './tsconfig.json' },
+      plugins: ['@typescript-eslint'],
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/eslint-recommended',
+        'plugin:@typescript-eslint/recommended',
+        'prettier/@typescript-eslint',
+      ],
+      rules: {
+        'no-use-before-define': 'off',
+        '@typescript-eslint/no-use-before-define': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/ban-types': 'off',
+        'no-prototype-builtins': 'off',
+      },
+    },
+    {
+      files: ['src/**/__tests__/*.spec.ts'],
+      parserOptions: { project: './tsconfig.jest.json' },
+      env: {
+        jest: true,
+      },
+    },
+  ],
+};

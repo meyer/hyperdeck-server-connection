@@ -1,120 +1,120 @@
-import type { DeserializedCommand } from '../types'
+import type { DeserializedCommand } from '../types';
 
 export interface PreviewCommand extends DeserializedCommand {
-	parameters: {
-		'disk id'?: string
-	}
+  parameters: {
+    'disk id'?: string;
+  };
 }
 
 export interface PlayCommand extends DeserializedCommand {
-	parameters: {
-		speed?: string
-		loop?: string
-		'single clip'?: string
-	}
+  parameters: {
+    speed?: string;
+    loop?: string;
+    'single clip'?: string;
+  };
 }
 
 export interface PlayrangeSetCommand extends DeserializedCommand {
-	parameters: {
-		'clip id'?: string
-		in?: string
-		out?: string
-	}
+  parameters: {
+    'clip id'?: string;
+    in?: string;
+    out?: string;
+  };
 }
 
 export interface RecordCommand extends DeserializedCommand {
-	parameters: {
-		name?: string
-	}
+  parameters: {
+    name?: string;
+  };
 }
 
 export interface ClipsGetCommand extends DeserializedCommand {
-	parameters: {
-		'clip id'?: string
-		count?: string
-	}
+  parameters: {
+    'clip id'?: string;
+    count?: string;
+  };
 }
 
 export interface ClipsAddCommand extends DeserializedCommand {
-	parameters: {
-		name?: string
-	}
+  parameters: {
+    name?: string;
+  };
 }
 
 export interface SlotInfoCommand extends DeserializedCommand {
-	parameters: {
-		'slot id'?: string
-	}
+  parameters: {
+    'slot id'?: string;
+  };
 }
 
 export interface SlotSelectCommand extends DeserializedCommand {
-	parameters: {
-		'slot id'?: string
-		'video format'?: string
-	}
+  parameters: {
+    'slot id'?: string;
+    'video format'?: string;
+  };
 }
 
 export interface NotifyCommand extends DeserializedCommand {
-	parameters: {
-		remote?: string
-		transport?: string
-		slot?: string
-		configuration?: string
-		'dropped frames'?: string
-	}
+  parameters: {
+    remote?: string;
+    transport?: string;
+    slot?: string;
+    configuration?: string;
+    'dropped frames'?: string;
+  };
 }
 
 export interface GoToCommand extends DeserializedCommand {
-	parameters: {
-		'clip id'?: string
-		clip?: string
-		timeline?: string
-		timecode?: string
-		'slot id'?: string
-	}
+  parameters: {
+    'clip id'?: string;
+    clip?: string;
+    timeline?: string;
+    timecode?: string;
+    'slot id'?: string;
+  };
 }
 
 export interface JogCommand extends DeserializedCommand {
-	parameters: {
-		timecode?: string
-	}
+  parameters: {
+    timecode?: string;
+  };
 }
 
 export interface ShuttleCommand extends DeserializedCommand {
-	parameters: {
-		speed?: string
-	}
+  parameters: {
+    speed?: string;
+  };
 }
 
 export interface RemoteCommand extends DeserializedCommand {
-	parameters: {
-		remote?: string
-	}
+  parameters: {
+    remote?: string;
+  };
 }
 
 export interface ConfigurationCommand extends DeserializedCommand {
-	parameters: {
-		'video input'?: string
-		'audio input'?: string
-		'file format'?: string
-	}
+  parameters: {
+    'video input'?: string;
+    'audio input'?: string;
+    'file format'?: string;
+  };
 }
 
 export interface FormatCommand extends DeserializedCommand {
-	parameters: {
-		prepare?: string
-		confirm?: string
-	}
+  parameters: {
+    prepare?: string;
+    confirm?: string;
+  };
 }
 
 export interface IdentifyCommand extends DeserializedCommand {
-	parameters: {
-		enable?: string
-	}
+  parameters: {
+    enable?: string;
+  };
 }
 
 export interface WatchdogCommand extends DeserializedCommand {
-	parameters: {
-		period?: string
-	}
+  parameters: {
+    period?: string;
+  };
 }

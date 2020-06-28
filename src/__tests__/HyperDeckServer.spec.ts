@@ -1,55 +1,55 @@
-import type { Socket } from 'net'
-import { EventEmitter } from 'events'
-import { getTestLogger } from './utils'
-import { invariant } from '../invariant'
+import type { Socket } from 'net';
+import { EventEmitter } from 'events';
+import { getTestLogger } from './utils';
+import { invariant } from '../invariant';
 
 const noop = (): any => {
-	return
-}
+  return;
+};
 
 class MockSocket extends EventEmitter implements Pick<Socket, 'destroy' | 'setEncoding' | 'write'> {
-	destroy = noop
-	setEncoding = noop
-	write = jest.fn()
+  destroy = noop;
+  setEncoding = noop;
+  write = jest.fn();
 }
 
 jest.mock('net', () => ({
-	createServer: (connectionListener?: (socket: MockSocket) => void) => {
-		const mockSocket = new MockSocket()
-		invariant(connectionListener, 'Missing connectionListener')
-		connectionListener(mockSocket)
-		return {
-			listen: noop,
-			on: noop,
-			unref: noop
-		}
-	}
-}))
+  createServer: (connectionListener?: (socket: MockSocket) => void) => {
+    const mockSocket = new MockSocket();
+    invariant(connectionListener, 'Missing connectionListener');
+    connectionListener(mockSocket);
+    return {
+      listen: noop,
+      on: noop,
+      unref: noop,
+    };
+  },
+}));
 
 describe('HyperdeckServer', () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-	it('sends output back to the ATEM', async () => {
-		expect.assertions(3)
+  it('sends output back to the ATEM', async () => {
+    expect.assertions(3);
 
-		const logger = getTestLogger()
+    const logger = getTestLogger();
 
-		const server = await import('../HyperDeckServer')
-		const hyperdeck = new server.HyperDeckServer('0.0.0.0', logger.logger)
-		const socketEntries = Object.entries(hyperdeck['sockets'])
-		expect(socketEntries.length).toBe(1)
-		const hyperdeckSocket = socketEntries[0][1]
-		const socket = hyperdeckSocket['socket']
+    const server = await import('../HyperDeckServer');
+    const hyperdeck = new server.HyperDeckServer('0.0.0.0', logger.logger);
+    const socketEntries = Object.entries(hyperdeck['sockets']);
+    expect(socketEntries.length).toBe(1);
+    const hyperdeckSocket = socketEntries[0][1];
+    const socket = hyperdeckSocket['socket'];
 
-		socket.emit('data', 'banana')
+    socket.emit('data', 'banana');
 
-		hyperdeck.close()
+    hyperdeck.close();
 
-		await new Promise((resolve) => setTimeout(() => resolve(), 500))
+    await new Promise((resolve) => setTimeout(() => resolve(), 500));
 
-		expect((socket.write as jest.Mock).mock.calls).toMatchInlineSnapshot(`
+    expect((socket.write as jest.Mock).mock.calls).toMatchInlineSnapshot(`
 		Array [
 		  Array [
 		    "500 connection info:
@@ -63,9 +63,9 @@ describe('HyperdeckServer', () => {
 		",
 		  ],
 		]
-	`)
+	`);
 
-		expect(logger.getLoggedOutput()).toMatchInlineSnapshot(`
+    expect(logger.getLoggedOutput()).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "level": 30,
@@ -128,6 +128,6 @@ describe('HyperdeckServer', () => {
 		",
 		  },
 		]
-	`)
-	})
-})
+	`);
+  });
+});

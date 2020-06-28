@@ -1,18 +1,18 @@
-import { MultilineParser } from '../MultilineParser'
-import { getTestLogger } from './utils'
-import { CRLF } from '../constants'
+import { MultilineParser } from '../MultilineParser';
+import { getTestLogger } from './utils';
+import { CRLF } from '../constants';
 
 const getParser = () => {
-	const { logger, getLoggedOutput } = getTestLogger()
-	const parser = new MultilineParser(logger)
-	const parse = (message: string) => parser.receivedString(message)
-	return { parse, getLoggedOutput }
-}
+  const { logger, getLoggedOutput } = getTestLogger();
+  const parser = new MultilineParser(logger);
+  const parse = (message: string) => parser.receivedString(message);
+  return { parse, getLoggedOutput };
+};
 
 describe('MultilineParser', () => {
-	it('works with single commands', () => {
-		const parser = getParser()
-		expect(parser.parse('play')).toMatchInlineSnapshot(`
+  it('works with single commands', () => {
+    const parser = getParser();
+    expect(parser.parse('play')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "play",
@@ -20,13 +20,13 @@ describe('MultilineParser', () => {
 		    "raw": "play",
 		  },
 		]
-	`)
-		expect(parser.getLoggedOutput()).toEqual([])
-	})
+	`);
+    expect(parser.getLoggedOutput()).toEqual([]);
+  });
 
-	it('works with multiple commands', () => {
-		const parser = getParser()
-		expect(parser.parse('play' + CRLF + 'stop' + CRLF + 'play')).toMatchInlineSnapshot(`
+  it('works with multiple commands', () => {
+    const parser = getParser();
+    expect(parser.parse('play' + CRLF + 'stop' + CRLF + 'play')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "play",
@@ -44,13 +44,13 @@ describe('MultilineParser', () => {
 		    "raw": "play",
 		  },
 		]
-	`)
-		expect(parser.getLoggedOutput()).toEqual([])
-	})
+	`);
+    expect(parser.getLoggedOutput()).toEqual([]);
+  });
 
-	it('does not validate commands with that do not have params', () => {
-		const parser = getParser()
-		expect(parser.parse('banana')).toMatchInlineSnapshot(`
+  it('does not validate commands with that do not have params', () => {
+    const parser = getParser();
+    expect(parser.parse('banana')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "banana",
@@ -58,32 +58,32 @@ describe('MultilineParser', () => {
 		    "raw": "banana",
 		  },
 		]
-	`)
-		expect(parser.getLoggedOutput()).toEqual([])
-	})
+	`);
+    expect(parser.getLoggedOutput()).toEqual([]);
+  });
 
-	it('throws an error when it receives an invalid command', () => {
-		expect(() =>
-			getParser().parse(
-				'notifyyyy: transporttttt: true slottttttttt: true remoteeeeee: true configurationnnn: false'
-			)
-		).toThrowErrorMatchingInlineSnapshot(`"Invalid command: \`notifyyyy\`"`)
-	})
+  it('throws an error when it receives an invalid command', () => {
+    expect(() =>
+      getParser().parse(
+        'notifyyyy: transporttttt: true slottttttttt: true remoteeeeee: true configurationnnn: false'
+      )
+    ).toThrowErrorMatchingInlineSnapshot(`"Invalid command: \`notifyyyy\`"`);
+  });
 
-	it('throws an error when it receives a valid command with invalid params', () => {
-		expect(() =>
-			getParser().parse(
-				'notify: transporttttt: true slottttttttt: true remoteeeeee: true configurationnnn: false'
-			)
-		).toThrowErrorMatchingInlineSnapshot(
-			`"Command malformed / paramName not recognised: \`true slottttttttt\`"`
-		)
-	})
+  it('throws an error when it receives a valid command with invalid params', () => {
+    expect(() =>
+      getParser().parse(
+        'notify: transporttttt: true slottttttttt: true remoteeeeee: true configurationnnn: false'
+      )
+    ).toThrowErrorMatchingInlineSnapshot(
+      `"Command malformed / paramName not recognised: \`true slottttttttt\`"`
+    );
+  });
 
-	it('parses valid commands with options', () => {
-		const parser = getParser()
-		expect(parser.parse('notify: transport: true slot: true remote: true configuration: false'))
-			.toMatchInlineSnapshot(`
+  it('parses valid commands with options', () => {
+    const parser = getParser();
+    expect(parser.parse('notify: transport: true slot: true remote: true configuration: false'))
+      .toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "notify",
@@ -96,9 +96,9 @@ describe('MultilineParser', () => {
 		    "raw": "notify: transport: true slot: true remote: true configuration: false",
 		  },
 		]
-  `)
+  `);
 
-		expect(parser.parse('configuration: video input: SDI audio input: XLR')).toMatchInlineSnapshot(`
+    expect(parser.parse('configuration: video input: SDI audio input: XLR')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "configuration",
@@ -109,9 +109,9 @@ describe('MultilineParser', () => {
 		    "raw": "configuration: video input: SDI audio input: XLR",
 		  },
 		]
-  `)
+  `);
 
-		expect(parser.parse('slot select: slot id: 2 video format: NTSC')).toMatchInlineSnapshot(`
+    expect(parser.parse('slot select: slot id: 2 video format: NTSC')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "slot select",
@@ -122,9 +122,9 @@ describe('MultilineParser', () => {
 		    "raw": "slot select: slot id: 2 video format: NTSC",
 		  },
 		]
-	`)
+	`);
 
-		expect(parser.parse('preview: enable: true')).toMatchInlineSnapshot(`
+    expect(parser.parse('preview: enable: true')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "preview",
@@ -134,9 +134,9 @@ describe('MultilineParser', () => {
 		    "raw": "preview: enable: true",
 		  },
 		]
-  `)
+  `);
 
-		expect(parser.parse('play on startup: single clip: true')).toMatchInlineSnapshot(`
+    expect(parser.parse('play on startup: single clip: true')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "play on startup",
@@ -146,9 +146,9 @@ describe('MultilineParser', () => {
 		    "raw": "play on startup: single clip: true",
 		  },
 		]
-  `)
+  `);
 
-		expect(parser.parse('clips get: clip id: example clip id')).toMatchInlineSnapshot(`
+    expect(parser.parse('clips get: clip id: example clip id')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "clips get",
@@ -158,9 +158,9 @@ describe('MultilineParser', () => {
 		    "raw": "clips get: clip id: example clip id",
 		  },
 		]
-  `)
+  `);
 
-		expect(parser.parse('playrange set: clip id: 12345')).toMatchInlineSnapshot(`
+    expect(parser.parse('playrange set: clip id: 12345')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "playrange set",
@@ -170,9 +170,9 @@ describe('MultilineParser', () => {
 		    "raw": "playrange set: clip id: 12345",
 		  },
 		]
-  `)
+  `);
 
-		expect(parser.parse('shuttle: speed: -1600')).toMatchInlineSnapshot(`
+    expect(parser.parse('shuttle: speed: -1600')).toMatchInlineSnapshot(`
 		Array [
 		  Object {
 		    "name": "shuttle",
@@ -182,8 +182,8 @@ describe('MultilineParser', () => {
 		    "raw": "shuttle: speed: -1600",
 		  },
 		]
-  `)
+  `);
 
-		expect(parser.getLoggedOutput()).toEqual([])
-	})
-})
+    expect(parser.getLoggedOutput()).toEqual([]);
+  });
+});

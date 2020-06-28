@@ -1,9 +1,9 @@
 {
-	"extends": "./config/tsconfig.base.json",
-	"exclude": ["src/**/*.spec.ts", "src/**/__mocks__/*"],
-	"compilerOptions": {
-		"rootDir": "src",
-		"outDir": "dist",
-		"module": "ESNext"
-	}
+  "extends": "./config/tsconfig.base.json",
+  "exclude": ["src/**/*.spec.ts", "src/**/__mocks__/*"],
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "module": "ESNext"
+  }
 }
