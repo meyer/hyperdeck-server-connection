@@ -50,84 +50,48 @@ describe('HyperdeckServer', () => {
     await new Promise((resolve) => setTimeout(() => resolve(), 500));
 
     expect((socket.write as jest.Mock).mock.calls).toMatchInlineSnapshot(`
-		Array [
-		  Array [
-		    "500 connection info:
-		protocol version: 1.11
-		model: NodeJS HyperDeck Server Library
+      Array [
+        Array [
+          "500 connection info:
+      protocol version: 1.11
+      model: NodeJS HyperDeck Server Library
 
-		",
-		  ],
-		  Array [
-		    "108 internal error
-		",
-		  ],
-		]
-	`);
+      ",
+        ],
+      ]
+    `);
 
     expect(logger.getLoggedOutput()).toMatchInlineSnapshot(`
-		Array [
-		  Object {
-		    "level": 30,
-		    "msg": "connection",
-		  },
-		  Object {
-		    "cmd": undefined,
-		    "level": 30,
-		    "msg": "--> send response to client",
-		    "responseText": "500 connection info:
-		protocol version: 1.11
-		model: NodeJS HyperDeck Server Library
+      Array [
+        Object {
+          "level": 30,
+          "msg": "connection",
+        },
+        Object {
+          "cmd": undefined,
+          "level": 30,
+          "msg": "---> send response to client",
+          "responseText": "500 connection info:
+      protocol version: 1.11
+      model: NodeJS HyperDeck Server Library
 
-		",
-		  },
-		  Object {
-		    "data": "banana",
-		    "level": 30,
-		    "msg": "<-- received message from client",
-		  },
-		  Object {
-		    "cmds": Array [
-		      Object {
-		        "name": "banana",
-		        "parameters": Object {},
-		        "raw": "banana",
-		      },
-		    ],
-		    "level": 30,
-		    "msg": "parsed commands",
-		  },
-		  Object {
-		    "cmd": Object {
-		      "name": "banana",
-		      "parameters": Object {},
-		      "raw": "banana",
-		    },
-		    "level": 30,
-		    "msg": "<-- banana",
-		  },
-		  Object {
-		    "cmd": Object {
-		      "name": "banana",
-		      "parameters": Object {},
-		      "raw": "banana",
-		    },
-		    "err": "Unhandled command name: \`banana\`",
-		    "level": 50,
-		    "msg": "unhandled command name",
-		  },
-		  Object {
-		    "cmd": Object {
-		      "name": "banana",
-		      "parameters": Object {},
-		      "raw": "banana",
-		    },
-		    "level": 50,
-		    "msg": "--> send response to client",
-		    "responseText": "108 internal error
-		",
-		  },
-		]
-	`);
+      ",
+        },
+        Object {
+          "data": "banana",
+          "level": 30,
+          "msg": "<--- received message from client",
+        },
+        Object {
+          "level": 50,
+          "msg": "Invalid command: \`'banana'\`",
+        },
+        Object {
+          "cmds": Array [],
+          "level": 30,
+          "msg": "parsed commands",
+        },
+      ]
+    `);
   });
 });

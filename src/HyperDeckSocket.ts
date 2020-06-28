@@ -69,7 +69,7 @@ export class HyperDeckSocket extends EventEmitter {
   };
 
   private onMessage(data: string): void {
-    this.logger.info({ data }, '<-- received message from client');
+    this.logger.info({ data }, '<--- received message from client');
 
     this.lastReceivedMS = Date.now();
 
@@ -154,10 +154,14 @@ export class HyperDeckSocket extends EventEmitter {
     paramsOrMessage?: Record<string, unknown> | string,
     cmd?: DeserializedCommand
   ): void {
-    const responseText = messageForCode(code, paramsOrMessage);
-    const method = ErrorCode[code] ? 'error' : 'info';
-    this.logger[method]({ responseText, cmd }, '--> send response to client');
-    this.socket.write(responseText);
+    try {
+      const responseText = messageForCode(code, paramsOrMessage);
+      const method = ErrorCode[code] ? 'error' : 'info';
+      this.logger[method]({ responseText, cmd }, '---> send response to client');
+      this.socket.write(responseText);
+    } catch (err) {
+      this.logger.error({ cmd }, '-x-> Error sending response: %s', err);
+    }
   }
 
   notify(type: NotifyType, params: Record<string, string>): void {

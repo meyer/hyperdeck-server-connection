@@ -9,6 +9,12 @@ interface Option<T extends Record<string, ArgKey> = Record<string, ArgKey>> {
 
 type ParamMap = Record<string, Option>;
 
+interface ParamInfo {
+  paramType: ArgKey;
+  /** The camelcase name we use everywhere */
+  paramName: string;
+}
+
 /** Internal container class that holds metadata about each HyperDeck event */
 class HyperDeckAPI<T extends ParamMap = {}> {
   constructor(private readonly options: T = {} as any) {}
@@ -26,17 +32,20 @@ class HyperDeckAPI<T extends ParamMap = {}> {
   };
 
   /** Get a `Set` of param names keyed by function name */
-  public getParamsByKey = (): { [K in keyof T]: Record<string, ArgKey> } =>
-    Object.entries(this.options).reduce<Record<string, Record<string, ArgKey>>>(
+  public getParamsByCommandName = (): { [K in keyof T]: Record<string, ParamInfo> } =>
+    Object.entries(this.options).reduce<Record<string, Record<string, ParamInfo>>>(
       (prev, [commandName, value]) => {
         if (!value.arguments) {
           // we still want hasOwnProperty(key) to be true
           prev[commandName] = {};
           return prev;
         }
-        prev[commandName] = Object.entries(value.arguments).reduce<Record<string, ArgKey>>(
+        prev[commandName] = Object.entries(value.arguments).reduce<Record<string, ParamInfo>>(
           (argObj, [argKey, argType]) => {
-            argObj[camelcaseToSpaceCase(argKey)] = argType;
+            argObj[camelcaseToSpaceCase(argKey)] = {
+              paramType: argType,
+              paramName: argKey,
+            };
             return argObj;
           },
           {}
@@ -90,7 +99,7 @@ const api = new HyperDeckAPI()
     description: 'set play range to play clip {n} only',
     arguments: {
       // maybe number?
-      clipId: 'string',
+      clipId: 'number',
       // description: 'set play range to play between timecode {inT} and timecode {outT}',
       in: 'timecode',
       out: 'timecode',
@@ -146,7 +155,7 @@ const api = new HyperDeckAPI()
     description: 'append a clip to timeline',
     arguments: {
       name: 'string',
-      clipId: 'string',
+      clipId: 'number',
       in: 'timecode',
       out: 'timecode',
     },
@@ -154,7 +163,7 @@ const api = new HyperDeckAPI()
   .addOption('clips remove', {
     description: 'remove clip {n} from the timeline (invalidates clip ids following clip {n})',
     arguments: {
-      clidId: 'string',
+      clipId: 'number',
     },
   })
   .addOption('clips clear', {
@@ -206,7 +215,7 @@ const api = new HyperDeckAPI()
   .addOption('goto', {
     description: 'go forward or backward within a clip or timeline',
     arguments: {
-      clipId: 'string',
+      clipId: 'number',
       clip: 'goto',
       timeline: 'goto',
       timecode: 'timecode',
@@ -270,4 +279,14 @@ const api = new HyperDeckAPI()
     },
   });
 
-export const paramsByKey = api.getParamsByKey();
+export const paramsByCommandName = api.getParamsByCommandName();
+
+export type CommandName = keyof typeof paramsByCommandName;
+
+export function assertValidCommandName(value: any): asserts value is CommandName {
+  invariant(
+    typeof value === 'string' && paramsByCommandName.hasOwnProperty(value),
+    'Invalid command: `%o`',
+    value
+  );
+}

@@ -1,12 +1,12 @@
-import type { DeserializedCommand } from './types';
+import { DeserializedCommand, stringToValueFns } from './types';
 import { CRLF } from './constants';
 import type { Logger } from 'pino';
-import { invariant } from './invariant';
-import { paramsByKey } from './api';
+import { invariant, FormattedError } from './invariant';
+import { paramsByCommandName, assertValidCommandName } from './api';
 
 export class MultilineParser {
-  private logger: Logger;
   private linesQueue: string[] = [];
+  private logger: Logger;
 
   constructor(logger: Logger) {
     this.logger = logger.child({ name: 'MultilineParser' });
@@ -49,9 +49,9 @@ export class MultilineParser {
       }
 
       const lines = this.linesQueue.splice(0, endLine + 1);
-      const r = this.parseResponse(lines);
-      if (r) {
-        res.push(r);
+      const parsedResponse = this.parseResponse(lines);
+      if (parsedResponse) {
+        res.push(parsedResponse);
       }
     }
 
@@ -59,72 +59,113 @@ export class MultilineParser {
   }
 
   private parseResponse(responseLines: string[]): DeserializedCommand | null {
-    const lines = responseLines.map((l) => l.trim());
+    try {
+      const lines = responseLines.map((l) => l.trim());
+      const firstLine = lines[0];
 
-    if (lines.length === 1 && lines[0].includes(':')) {
-      const bits = lines[0].split(': ');
+      if (lines.length === 1) {
+        if (!firstLine.includes(':')) {
+          assertValidCommandName(firstLine);
+          return {
+            raw: lines.join(CRLF),
+            name: firstLine,
+            parameters: {},
+          };
+        }
 
-      const msg = bits.shift() as keyof typeof paramsByKey;
-      invariant(msg, 'Unrecognised command');
-      invariant(paramsByKey.hasOwnProperty(msg), 'Invalid command: `%s`', msg);
+        // single-line command with params
 
-      const params: Record<string, string> = {};
-      const paramNames = paramsByKey[msg];
-      let param = bits.shift();
-      invariant(param, 'No named parameters found');
+        const bits = firstLine.split(': ');
 
-      for (let i = 0; i < bits.length - 1; i++) {
-        const bit = bits[i];
-        const bobs = bit.split(' ');
+        const commandName = bits.shift();
+        assertValidCommandName(commandName);
 
-        let nextParam = '';
-        for (let i = bobs.length - 1; i >= 0; i--) {
-          nextParam = (bobs.pop() + ' ' + nextParam).trim();
-          if (paramNames.hasOwnProperty(nextParam)) {
-            break;
+        const params: Record<string, any> = {};
+        const paramNames = paramsByCommandName[commandName];
+        let param = bits.shift();
+        invariant(param, 'No named parameters found');
+
+        for (let i = 0; i < bits.length - 1; i++) {
+          const bit = bits[i];
+          const bobs = bit.split(' ');
+
+          let nextParam = '';
+          for (let i = bobs.length - 1; i >= 0; i--) {
+            nextParam = (bobs.pop() + ' ' + nextParam).trim();
+            if (paramNames.hasOwnProperty(nextParam)) {
+              break;
+            }
           }
+
+          invariant(bobs.length > 0, 'Command malformed / paramName not recognised: `%s`', bit);
+          invariant(paramNames.hasOwnProperty(param), 'Unsupported param: `%o`', param);
+
+          const value = bobs.join(' ');
+          const { paramName, paramType } = paramNames[param];
+
+          const formatter = stringToValueFns[paramType];
+          params[paramName] = formatter(value);
+          param = nextParam;
         }
 
-        invariant(bobs.length > 0, 'Command malformed / paramName not recognised: `%s`', bit);
+        invariant(paramNames.hasOwnProperty(param), 'Unsupported param: `%o`', param);
 
-        params[param] = bobs.join(' ');
-        param = nextParam;
+        const value = bits[bits.length - 1];
+        const { paramName, paramType } = paramNames[param];
+
+        const formatter = stringToValueFns[paramType];
+        params[paramName] = formatter(value);
+
+        return {
+          raw: lines.join(CRLF),
+          name: commandName,
+          parameters: params,
+        };
       }
 
-      params[param] = bits[bits.length - 1];
+      invariant(
+        firstLine.endsWith(':'),
+        'Expected a line ending in semicolon, received `%o`',
+        firstLine
+      );
 
-      return {
-        raw: lines.join(CRLF),
-        name: msg,
-        parameters: params,
-      };
-    } else {
-      const headerMatch = lines[0].match(/(.+?)(:|)$/im);
-      if (!headerMatch) {
-        this.logger.error({ header: lines[0] }, 'failed to parse header');
-        return null;
-      }
+      // remove the semicolon at the end of the command
+      const commandName = firstLine.slice(0, -1);
 
-      const msg = headerMatch[1];
+      assertValidCommandName(commandName);
 
-      const params: Record<string, string> = {};
+      const paramNames = paramsByCommandName[commandName];
 
-      for (let i = 1; i < lines.length; i++) {
-        const lineMatch = lines[i].match(/^(.*?): (.*)$/im);
-        if (!lineMatch) {
-          this.logger.error({ line: lines[i] }, 'failed to parse line');
-          continue;
-        }
+      const params: Record<string, any> = {};
 
-        params[lineMatch[1]] = lineMatch[2];
+      for (const line of lines) {
+        const lineMatch = line.match(/^(.*?): (.*)$/im);
+        invariant(lineMatch, 'Failed to parse line: `%o`', line);
+
+        const param = lineMatch[1];
+        const value = lineMatch[2];
+        invariant(paramNames.hasOwnProperty(param), 'Unsupported param: `%o`', param);
+        const { paramName, paramType } = paramNames[param];
+
+        const formatter = stringToValueFns[paramType];
+        params[paramName] = formatter(value);
       }
 
       const res: DeserializedCommand = {
         raw: lines.join(CRLF),
-        name: msg,
+        name: commandName,
         parameters: params,
       };
+
       return res;
+    } catch (err) {
+      if (err instanceof FormattedError) {
+        this.logger.error(err.template, ...err.args);
+      } else {
+        this.logger.error({ err: err + '' }, 'parseResponse error');
+      }
+
+      return null;
     }
   }
 }
