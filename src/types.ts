@@ -1,3 +1,6 @@
+import { invariant } from './invariant';
+import { Timecode } from './Timecode';
+
 export interface NotificationConfig {
   transport: boolean;
   remote: boolean;
@@ -159,24 +162,160 @@ export const isTransportStatus = (value: any): value is TransportStatus => {
   return typeof value === 'string' && transportStatus.hasOwnProperty(value);
 };
 
-export enum FileFormat {
-  QuickTimeUncompressed = 'QuickTimeUncompressed',
-  QuickTimeProResHQ = 'QuickTimeProResHQ',
-  QuickTimeProRes = 'QuickTimeProRes',
-  QuickTimeProResLT = 'QuickTimeProResLT',
-  QuickTimeProResProxy = 'QuickTimeProResProxy',
-  QuickTimeDNxHR220 = 'QuickTimeDNxHR220',
-  DNxHR220 = 'DNxHR220',
+export const stopModes = {
+  lastframe: true,
+  nextframe: true,
+  black: true,
+};
+
+export type StopMode = keyof typeof stopModes;
+
+export const isStopMode = (value: any): value is StopMode => {
+  return typeof value === 'string' && stopModes.hasOwnProperty(value);
+};
+
+export const videoInputs = {
+  SDI: true,
+  HDMI: true,
+  component: true,
+};
+
+export type VideoInput = keyof typeof videoInputs;
+
+export const isVideoInput = (value: any): value is VideoInput => {
+  return typeof value === 'string' && videoInputs.hasOwnProperty(value);
+};
+
+export const audioInputs = {
+  XLR: true,
+  RCA: true,
+  // TODO(meyer) verify this
+  embedded: true,
+};
+
+export type AudioInput = keyof typeof audioInputs;
+
+export const isAudioInput = (value: any): value is AudioInput => {
+  return typeof value === 'string' && audioInputs.hasOwnProperty(value);
+};
+
+export const audioCodecs = {
+  PCM: true,
+  AAC: true,
+};
+
+export type AudioCodec = keyof typeof audioCodecs;
+
+export const isAudioCodec = (value: any): value is AudioCodec => {
+  return typeof value === 'string' && audioCodecs.hasOwnProperty(value);
+};
+
+export const timecodeInputs = {
+  external: true,
+  embedded: true,
+  preset: true,
+  clip: true,
+};
+
+export type TimecodeInput = keyof typeof timecodeInputs;
+
+export const isTimecodeInput = (value: any): value is TimecodeInput => {
+  return typeof value === 'string' && timecodeInputs.hasOwnProperty(value);
+};
+
+export const recordTriggers = {
+  none: true,
+  recordbit: true,
+  timecoderun: true,
+};
+
+export type RecordTrigger = keyof typeof recordTriggers;
+
+export const isRecordTrigger = (value: any): value is RecordTrigger => {
+  return typeof value === 'string' && recordTriggers.hasOwnProperty(value);
+};
+
+export type FileFormat =
+  | 'QuickTimeUncompressed'
+  | 'QuickTimeProResHQ'
+  | 'QuickTimeProRes'
+  | 'QuickTimeProResLT'
+  | 'QuickTimeProResProxy'
+  | 'QuickTimeDNxHR220'
+  | 'DNxHR220';
+
+export type ArgKey = keyof TypesByStringKey;
+
+export interface TypesByStringKey {
+  boolean: boolean;
+  string: string;
+  timecode: Timecode;
+  number: number;
+  videoformat: VideoFormat;
+  stopmode: StopMode;
+  goto: 'start' | 'end' | string | number;
+  videoinput: VideoInput;
+  audioinput: AudioInput;
+  fileformat: string;
+  audiocodec: AudioCodec;
+  timecodeinput: TimecodeInput;
+  recordtrigger: RecordTrigger;
 }
 
-export enum AudioInput {
-  embedded = 'embedded',
-  XLR = 'XLR',
-  RCA = 'RCA',
-}
-
-export enum VideoInputs {
-  SDI = 'SDI',
-  HDMI = 'HDMI',
-  component = 'component',
-}
+export const stringToValueFns: {
+  /** Coerce string to the correct type or throw if the string cannot be converted. */
+  [K in keyof TypesByStringKey]: (value: string) => TypesByStringKey[K];
+} = {
+  boolean: (value) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    invariant(false, 'Unsupported value `%o` passed to `boolean`', value);
+  },
+  string: (value) => value,
+  timecode: (value) => Timecode.toTimecode(value),
+  number: (value) => {
+    const valueNum = parseFloat(value);
+    invariant(!isNaN(valueNum), 'valueNum `%o` is NaN', value);
+    return valueNum;
+  },
+  videoformat: (value) => {
+    invariant(isVideoFormat(value), 'Unsupported video format: `%o`');
+    return value;
+  },
+  stopmode: (value) => {
+    invariant(isStopMode(value), 'Unsupported stopmode: `%o`', value);
+    return value;
+  },
+  goto: (value) => {
+    if (value === 'start' || value === 'end') {
+      return value;
+    }
+    const valueNum = parseInt(value, 10);
+    if (!isNaN(valueNum)) {
+      return valueNum;
+    }
+    // TODO(meyer) validate further
+    return value;
+  },
+  videoinput: (value) => {
+    invariant(isVideoInput(value), 'Unsupported video input: `%o`', value);
+    return value;
+  },
+  audioinput: (value) => {
+    invariant(isAudioInput(value), 'Unsupported audio input: `%o`', value);
+    return value;
+  },
+  fileformat: (value) => value,
+  audiocodec: (value) => {
+    invariant(isAudioCodec(value), 'Unsupported audio codec: `%o`', value);
+    return value;
+  },
+  timecodeinput: (value) => {
+    invariant(isTimecodeInput(value), 'Unsupported timecode input: `%o`', value);
+    return value;
+  },
+  recordtrigger: (value) => {
+    invariant(isRecordTrigger(value), 'Unsupported record trigger: `%o`', value);
+    return value;
+  },
+};

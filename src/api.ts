@@ -1,41 +1,19 @@
-import { Timecode } from './Timecode';
-import { VideoFormat } from './types';
 import { invariant } from './invariant';
+import { camelcaseToSpaceCase } from './utils';
+import { ArgKey } from './types';
 
-type ArgStringTypes = Record<string, keyof TypesByStringKey>;
-
-interface TypesByStringKey {
-  boolean: boolean;
-  string: string;
-  timecode: Timecode;
-  number: number;
-  videoformat: VideoFormat;
-  stopmode: 'lastframe' | 'nextframe' | 'black';
-  goto: 'start' | 'end' | string | number;
-  videoinput: 'SDI' | 'HDMI' | 'component';
-  audioinput: 'XLR' | 'RCA';
-  fileformat: string;
-  audiocodec: 'PCM' | 'AAC';
-  timecodeinput: 'external' | 'embedded' | 'preset' | 'clip';
-  recordtrigger: 'none' | 'recordbit' | 'timecoderun';
-}
-
-interface Option<T extends ArgStringTypes> {
+interface Option<T extends Record<string, ArgKey> = Record<string, ArgKey>> {
   description: string;
   arguments?: T;
 }
 
-// type ArgsTypes<T extends ArgStringTypes> = {
-// 	[K in keyof T]?: T[K] extends (infer R)[] ? R : TypesByStringKey[T[K]]
-// }
-
-type ParamMap = Record<string, Option<any>>;
+type ParamMap = Record<string, Option>;
 
 /** Internal container class that holds metadata about each HyperDeck event */
 class HyperDeckAPI<T extends ParamMap = {}> {
   constructor(private readonly options: T = {} as any) {}
 
-  public addOption = <K extends string, R extends ArgStringTypes = {}>(
+  public addOption = <K extends string, R extends Record<string, ArgKey> = {}>(
     key: K | [K, ...string[]],
     option: Option<R>
   ): HyperDeckAPI<T & { [key in K]: Option<R> }> => {
@@ -44,21 +22,29 @@ class HyperDeckAPI<T extends ParamMap = {}> {
     // NOTE: this mutates the original options object
     // shouldn't be a problem since this is only used internally
     Object.assign(this.options, { [k]: option });
-    return this;
+    return this as any;
   };
 
-  /** Get a Set of param names keyed by function name */
-  public getParamsByKey = (): { [K in keyof T]: Set<string> } =>
-    Object.entries(this.options).reduce<Record<string, Set<string>>>((prev, [key, value]) => {
-      prev[key] = new Set(
-        value.arguments
-          ? Object.keys(value.arguments).map((key) =>
-              key.replace(/([a-z])([A-Z]+)/g, '$1 $2').toLowerCase()
-            )
-          : []
-      );
-      return prev;
-    }, {}) as any;
+  /** Get a `Set` of param names keyed by function name */
+  public getParamsByKey = (): { [K in keyof T]: Record<string, ArgKey> } =>
+    Object.entries(this.options).reduce<Record<string, Record<string, ArgKey>>>(
+      (prev, [commandName, value]) => {
+        if (!value.arguments) {
+          // we still want hasOwnProperty(key) to be true
+          prev[commandName] = {};
+          return prev;
+        }
+        prev[commandName] = Object.entries(value.arguments).reduce<Record<string, ArgKey>>(
+          (argObj, [argKey, argType]) => {
+            argObj[camelcaseToSpaceCase(argKey)] = argType;
+            return argObj;
+          },
+          {}
+        );
+        return prev;
+      },
+      {}
+    ) as any;
 }
 
 const api = new HyperDeckAPI()

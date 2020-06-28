@@ -80,7 +80,7 @@ export class MultilineParser {
         let nextParam = '';
         for (let i = bobs.length - 1; i >= 0; i--) {
           nextParam = (bobs.pop() + ' ' + nextParam).trim();
-          if (paramNames.has(nextParam)) {
+          if (paramNames.hasOwnProperty(nextParam)) {
             break;
           }
         }

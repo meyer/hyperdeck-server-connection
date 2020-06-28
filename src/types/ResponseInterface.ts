@@ -4,7 +4,7 @@ import type {
   VideoFormat,
   SlotStatus,
   AudioInput,
-  VideoInputs,
+  VideoInput,
   FileFormat,
 } from '../types';
 
@@ -62,7 +62,7 @@ export interface SlotInfo {
 
 export interface Configuration {
   'audio input': AudioInput;
-  'video input': VideoInputs;
+  'video input': VideoInput;
   'file format': FileFormat;
 }
 

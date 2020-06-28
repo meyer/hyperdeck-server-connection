@@ -1,6 +1,7 @@
 import { CRLF } from './constants';
 import { ResponseCode, responseNamesByCode } from './types';
 import { invariant } from './invariant';
+import { camelcaseToSpaceCase } from './utils';
 
 // escape CR/LF and remove colons
 const sanitiseMessage = (input: string): string => {
@@ -47,7 +48,7 @@ export const messageForCode = (
       }
 
       // convert camelCase keys to space-separated words
-      const formattedKey = key.replace(/([a-z])([A-Z]+)/g, '$1 $2').toLowerCase();
+      const formattedKey = camelcaseToSpaceCase(key);
 
       return prev + formattedKey + ': ' + valueString + CRLF;
     }, firstLine + ':' + CRLF) + CRLF

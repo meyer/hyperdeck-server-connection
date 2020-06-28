@@ -19,4 +19,15 @@ export class Timecode {
   }
 
   public toString: () => string;
+
+  static toTimecode = (tcString: string): Timecode => {
+    const bits = tcString.split(':');
+    invariant(bits.length === 4, 'Expected 4 bits, received %o bits', bits.length);
+    const bitsInt = bits.map((bit) => {
+      const bitInt = parseInt(bit, 10);
+      invariant(!isNaN(bitInt), 'bit `%s` is NaN', bit);
+      return bitInt;
+    });
+    return new Timecode(bitsInt[0], bitsInt[1], bitsInt[2], bitsInt[3]);
+  };
 }
