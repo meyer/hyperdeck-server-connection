@@ -47,7 +47,7 @@ export const messageForCode = (
 			}
 
 			// convert camelCase keys to space-separated words
-			const formattedKey = key.replace(/([a-z])([A-Z]+)/, '$1 $2').toLowerCase()
+			const formattedKey = key.replace(/([a-z])([A-Z]+)/g, '$1 $2').toLowerCase()
 
 			return prev + formattedKey + ': ' + valueString + CRLF
 		}, firstLine + ':' + CRLF) + CRLF

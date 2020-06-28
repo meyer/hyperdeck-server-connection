@@ -25,9 +25,9 @@ interface Option<T extends ArgStringTypes> {
 	arguments?: T
 }
 
-type ArgsTypes<T extends ArgStringTypes> = {
-	[K in keyof T]?: T[K] extends (infer R)[] ? R : TypesByStringKey[T[K]]
-}
+// type ArgsTypes<T extends ArgStringTypes> = {
+// 	[K in keyof T]?: T[K] extends (infer R)[] ? R : TypesByStringKey[T[K]]
+// }
 
 type ParamMap = Record<string, Option<any>>
 
@@ -46,29 +46,19 @@ class HyperDeckAPI<T extends ParamMap = {}> {
 		Object.assign(this.options, { [k]: option })
 		return this
 	}
-}
 
-/** Class that allows users to listen to specific HyperDeck events */
-class HyperDeckEventHandler<T extends ParamMap = {}> {
-	constructor(private api: HyperDeckAPI<T>) {}
-
-	private eventHandlers: Partial<
-		{ [K in keyof T]: (obj: ArgsTypes<T[K]['arguments']>) => void }
-	> = {}
-
-	public handleEvent = <K extends keyof T>(
-		key: K,
-		callback: (args: ArgsTypes<T[K]['arguments']>) => void
-	): HyperDeckEventHandler<Omit<T, K>> => {
-		invariant(this.api.hasOwnProperty(key), 'unsupported event: `%s`', key)
-		invariant(
-			!this.eventHandlers.hasOwnProperty(key),
-			'event handler already exists for key `%s`',
-			key
-		)
-		this.eventHandlers[key] = callback
-		return this
-	}
+	/** Get a Set of param names keyed by function name */
+	public getParamsByKey = (): { [K in keyof T]: Set<string> } =>
+		Object.entries(this.options).reduce<Record<string, Set<string>>>((prev, [key, value]) => {
+			prev[key] = new Set(
+				value.arguments
+					? Object.keys(value.arguments).map((key) =>
+							key.replace(/([a-z])([A-Z]+)/g, '$1 $2').toLowerCase()
+					  )
+					: []
+			)
+			return prev
+		}, {}) as any
 }
 
 const api = new HyperDeckAPI()
@@ -92,6 +82,12 @@ const api = new HyperDeckAPI()
 	})
 	.addOption('ping', {
 		description: 'check device is responding'
+	})
+	.addOption('preview', {
+		description: 'switch to preview or output',
+		arguments: {
+			enable: 'boolean'
+		}
 	})
 	.addOption('play', {
 		description: 'play from current timecode',
@@ -288,4 +284,4 @@ const api = new HyperDeckAPI()
 		}
 	})
 
-export const getEventHandler = () => new HyperDeckEventHandler(api)
+export const paramsByKey = api.getParamsByKey()

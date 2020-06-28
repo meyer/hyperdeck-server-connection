@@ -62,12 +62,20 @@ describe('MultilineParser', () => {
 		expect(parser.getLoggedOutput()).toEqual([])
 	})
 
-	it('validates commands with params', () => {
-		const parseMe = () =>
+	it('throws an error when it receives an invalid command', () => {
+		expect(() =>
 			getParser().parse(
 				'notifyyyy: transporttttt: true slottttttttt: true remoteeeeee: true configurationnnn: false'
 			)
-		expect(parseMe).toThrowErrorMatchingInlineSnapshot(
+		).toThrowErrorMatchingInlineSnapshot(`"Invalid command: \`notifyyyy\`"`)
+	})
+
+	it('throws an error when it receives a valid command with invalid params', () => {
+		expect(() =>
+			getParser().parse(
+				'notify: transporttttt: true slottttttttt: true remoteeeeee: true configurationnnn: false'
+			)
+		).toThrowErrorMatchingInlineSnapshot(
 			`"Command malformed / paramName not recognised: \`true slottttttttt\`"`
 		)
 	})

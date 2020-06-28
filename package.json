@@ -55,7 +55,7 @@
 		"build": "tsdx build",
 		"lint": "eslint src",
 		"lint:fix": "eslint --fix",
-		"test": "tsdx build && tsdx test",
+		"test": "tsdx build && yarn jest",
 		"prepack": "rimraf dist && tsdx build",
 		"test:coverage": "yarn test -- --coverage",
 		"bump-canary-version": "node ./scripts/bumpCanaryVersion.js",

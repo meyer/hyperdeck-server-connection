@@ -1,7 +1,8 @@
 import type { DeserializedCommand } from './types'
-import { parametersByCommandName, CRLF } from './constants'
+import { CRLF } from './constants'
 import type { Logger } from 'pino'
 import { invariant } from './invariant'
+import { paramsByKey } from './api'
 
 export class MultilineParser {
 	private logger: Logger
@@ -63,11 +64,12 @@ export class MultilineParser {
 		if (lines.length === 1 && lines[0].includes(':')) {
 			const bits = lines[0].split(': ')
 
-			const msg = bits.shift() as keyof typeof parametersByCommandName
+			const msg = bits.shift() as keyof typeof paramsByKey
 			invariant(msg, 'Unrecognised command')
+			invariant(paramsByKey.hasOwnProperty(msg), 'Invalid command: `%s`', msg)
 
 			const params: Record<string, string> = {}
-			const paramNames = new Set(parametersByCommandName[msg])
+			const paramNames = paramsByKey[msg]
 			let param = bits.shift()
 			invariant(param, 'No named parameters found')
 
