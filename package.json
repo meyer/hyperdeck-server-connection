@@ -68,6 +68,7 @@
     "license-validate": "node-license-validator -p -d --allow-licenses MIT BSD BSD-3-Clause BSD-2-Clause ISC Apache Apache-2.0 WTFPL Unlicense --allow-packages cycle"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.10.3",
     "@types/jest": "^26.0.3",
     "@types/npm-packlist": "^1.1.1",
     "@types/pino": "^6.3.0",

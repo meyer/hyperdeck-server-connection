@@ -70,7 +70,7 @@ export class MultilineParser {
             raw: lines.join(CRLF),
             name: firstLine,
             parameters: {},
-          };
+          } as DeserializedCommand;
         }
 
         // single-line command with params
@@ -120,7 +120,7 @@ export class MultilineParser {
           raw: lines.join(CRLF),
           name: commandName,
           parameters: params,
-        };
+        } as DeserializedCommand;
       }
 
       invariant(
@@ -155,7 +155,7 @@ export class MultilineParser {
         raw: lines.join(CRLF),
         name: commandName,
         parameters: params,
-      };
+      } as DeserializedCommand;
 
       return res;
     } catch (err) {

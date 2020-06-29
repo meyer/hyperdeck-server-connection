@@ -28,7 +28,7 @@ describe('messageForCode', () => {
   });
 
   it('filters out null and undefined values', () => {
-    expect(messageForCode(SynchronousCode.OK, { param1: null, param2: undefined }))
+    expect(messageForCode(SynchronousCode.OK, { param1: null, param2: undefined } as any))
       .toMatchInlineSnapshot(`
       "200 ok
       "
@@ -49,7 +49,7 @@ describe('messageForCode', () => {
 
   it('throws an error if a non-primitive param type is encountered', () => {
     expect(() =>
-      messageForCode(SynchronousCode.OK, { param1: { hmmm: true } })
-    ).toThrowErrorMatchingInlineSnapshot(`"Unhandled value type: \`object\`"`);
+      messageForCode(SynchronousCode.OK, { param1: { hmmm: true } as any })
+    ).toThrowErrorMatchingInlineSnapshot(`"Unhandled value type for key \`param1\`: \`object\`"`);
   });
 });

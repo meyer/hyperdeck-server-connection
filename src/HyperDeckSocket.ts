@@ -7,8 +7,9 @@ import {
   NotifyType,
   SynchronousCode,
   ResponseCode,
+  DeserializedCommandsByName,
+  TypesByStringKey,
 } from './types';
-import * as DeserializedCommands from './types/DeserializedCommands';
 import { MultilineParser } from './MultilineParser';
 import type { Logger } from 'pino';
 import { messageForCode } from './messageForCode';
@@ -60,12 +61,19 @@ export class HyperDeckSocket extends EventEmitter {
   private lastReceivedMS = -1;
   private watchdogTimer: NodeJS.Timer | null = null;
 
-  private notifySettings = {
-    slot: false,
-    transport: false,
-    remote: false,
+  private notifySettings: Record<
+    keyof DeserializedCommandsByName['notify']['parameters'],
+    boolean
+  > = {
     configuration: false,
-    'dropped frames': false,
+    displayTimecode: false,
+    droppedFrames: false,
+    dynamicRange: false,
+    playrange: false,
+    remote: false,
+    slot: false,
+    timelinePosition: false,
+    transport: false,
   };
 
   private onMessage(data: string): void {
@@ -81,7 +89,7 @@ export class HyperDeckSocket extends EventEmitter {
       if (cmd.name === 'watchdog') {
         if (this.watchdogTimer) clearInterval(this.watchdogTimer);
 
-        const watchdogCmd = cmd as DeserializedCommands.WatchdogCommand;
+        const watchdogCmd = cmd as DeserializedCommandsByName['watchdog'];
         if (watchdogCmd.parameters.period) {
           this.watchdogTimer = setInterval(() => {
             if (Date.now() - this.lastReceivedMS > Number(watchdogCmd.parameters.period)) {
@@ -94,14 +102,14 @@ export class HyperDeckSocket extends EventEmitter {
           }, Number(watchdogCmd.parameters.period) * 1000);
         }
       } else if (cmd.name === 'notify') {
-        const notifyCmd = cmd as DeserializedCommands.NotifyCommand;
+        const notifyCmd = cmd as DeserializedCommandsByName['notify'];
 
         if (Object.keys(notifyCmd.parameters).length > 0) {
           for (const param of Object.keys(notifyCmd.parameters) as Array<
             keyof typeof notifyCmd.parameters
           >) {
             if (this.notifySettings[param] !== undefined) {
-              this.notifySettings[param] = notifyCmd.parameters[param] === 'true';
+              this.notifySettings[param] = notifyCmd.parameters[param] === true;
             }
           }
         } else {
@@ -151,7 +159,7 @@ export class HyperDeckSocket extends EventEmitter {
 
   sendResponse(
     code: ResponseCode,
-    paramsOrMessage?: Record<string, unknown> | string,
+    paramsOrMessage?: Record<string, TypesByStringKey[keyof TypesByStringKey]> | string,
     cmd?: DeserializedCommand
   ): void {
     try {

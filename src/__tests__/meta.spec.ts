@@ -67,10 +67,6 @@ describe('npm publish', () => {
       - dist/Timecode.d.ts.map
       - dist/types.d.ts
       - dist/types.d.ts.map
-      - dist/types/DeserializedCommands.d.ts
-      - dist/types/DeserializedCommands.d.ts.map
-      - dist/types/ResponseInterface.d.ts
-      - dist/types/ResponseInterface.d.ts.map
       - dist/utils.d.ts
       - dist/utils.d.ts.map
       - src/__tests__/HyperDeckServer.spec.ts
@@ -89,8 +85,6 @@ describe('npm publish', () => {
       - src/MultilineParser.ts
       - src/Timecode.ts
       - src/types.ts
-      - src/types/DeserializedCommands.ts
-      - src/types/ResponseInterface.ts
       - src/utils.ts
       "
     `);

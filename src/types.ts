@@ -1,5 +1,6 @@
 import { invariant } from './invariant';
 import { Timecode } from './Timecode';
+import type { CommandName, CommandParamsByCommandName, CommandResponsesByCommandName } from './api';
 
 export interface NotificationConfig {
   transport: boolean;
@@ -8,11 +9,28 @@ export interface NotificationConfig {
   configuration: boolean;
 }
 
-export interface DeserializedCommand {
-  raw: string;
-  name: string;
-  parameters: Record<string, string | undefined>;
-}
+export type DeserializedCommandsByName = {
+  [K in CommandName]: {
+    raw: string;
+    name: K;
+    parameters: CommandParamsByCommandName[K];
+  };
+};
+
+export type DeserializedCommand = DeserializedCommandsByName[CommandName];
+
+export type CommandHandler<T extends CommandName> = (
+  cmd: DeserializedCommandsByName[T]['parameters']
+) => Promise<CommandResponsesByCommandName[T]>;
+
+export type ResponsesByCommandName = {
+  [K in CommandName]: {
+    name: K;
+    response: CommandResponsesByCommandName[K];
+  };
+};
+
+export type CommandResponse = ResponsesByCommandName[CommandName];
 
 export type ResponseCode = ErrorCode | SynchronousCode | AsynchronousCode;
 
@@ -139,6 +157,24 @@ export const videoFormats = {
   '4Kp60': true,
 };
 
+export interface ClipV1 {
+  name: string;
+  startT: Timecode;
+  duration: Timecode;
+}
+
+export const isClipV1 = (value: any): value is ClipV1 => {
+  return typeof value === 'object' && value !== null && typeof value.name === 'string';
+};
+
+export interface ClipV2 {
+  startT: Timecode;
+  duration: number;
+  inT: Timecode;
+  outT: Timecode;
+  name: string;
+}
+
 export type VideoFormat = keyof typeof videoFormats;
 
 export const isVideoFormat = (value: any): value is VideoFormat => {
@@ -246,6 +282,10 @@ export type FileFormat =
 
 export type ArgKey = keyof TypesByStringKey;
 
+export type ArgsTypes<T extends Record<string, ArgKey>> = {
+  [K in keyof T]?: TypesByStringKey[T[K]];
+};
+
 export interface TypesByStringKey {
   boolean: boolean;
   string: string;
@@ -260,21 +300,40 @@ export interface TypesByStringKey {
   audiocodec: AudioCodec;
   timecodeinput: TimecodeInput;
   recordtrigger: RecordTrigger;
+  clips: ClipV1[];
+  slotstatus: SlotStatus;
+  transportstatus: TransportStatus;
 }
+
+function assertArrayOf<T>(
+  predicate: (v: any) => v is T,
+  value: any,
+  message: string
+): asserts value is T[] {
+  invariant(Array.isArray(value), 'Expected an array');
+  for (const item of value) {
+    invariant(predicate(item), message);
+  }
+}
+
+const getStringOrThrow = (value: any): string => {
+  invariant(typeof value === 'string', 'Expected a string');
+  return value;
+};
 
 export const stringToValueFns: {
   /** Coerce string to the correct type or throw if the string cannot be converted. */
-  [K in keyof TypesByStringKey]: (value: string) => TypesByStringKey[K];
+  [K in keyof TypesByStringKey]: (value: unknown) => TypesByStringKey[K];
 } = {
   boolean: (value) => {
     if (value === 'true') return true;
     if (value === 'false') return false;
     invariant(false, 'Unsupported value `%o` passed to `boolean`', value);
   },
-  string: (value) => value,
-  timecode: (value) => Timecode.toTimecode(value),
+  string: getStringOrThrow,
+  timecode: (value) => Timecode.toTimecode(getStringOrThrow(value)),
   number: (value) => {
-    const valueNum = parseFloat(value);
+    const valueNum = parseFloat(getStringOrThrow(value));
     invariant(!isNaN(valueNum), 'valueNum `%o` is NaN', value);
     return valueNum;
   },
@@ -290,12 +349,12 @@ export const stringToValueFns: {
     if (value === 'start' || value === 'end') {
       return value;
     }
-    const valueNum = parseInt(value, 10);
+    const valueNum = parseInt(getStringOrThrow(value), 10);
     if (!isNaN(valueNum)) {
       return valueNum;
     }
     // TODO(meyer) validate further
-    return value;
+    return getStringOrThrow(value);
   },
   videoinput: (value) => {
     invariant(isVideoInput(value), 'Unsupported video input: `%o`', value);
@@ -305,7 +364,7 @@ export const stringToValueFns: {
     invariant(isAudioInput(value), 'Unsupported audio input: `%o`', value);
     return value;
   },
-  fileformat: (value) => value,
+  fileformat: getStringOrThrow,
   audiocodec: (value) => {
     invariant(isAudioCodec(value), 'Unsupported audio codec: `%o`', value);
     return value;
@@ -316,6 +375,18 @@ export const stringToValueFns: {
   },
   recordtrigger: (value) => {
     invariant(isRecordTrigger(value), 'Unsupported record trigger: `%o`', value);
+    return value;
+  },
+  clips: (value) => {
+    assertArrayOf(isClipV1, value, 'Expected an array of clips');
+    return value;
+  },
+  slotstatus: (value) => {
+    invariant(isSlotStatus(value), 'Unsupported slot status: `%o`', value);
+    return value;
+  },
+  transportstatus: (value) => {
+    invariant(isTransportStatus(value), 'Unsupported slot status: `%o`', value);
     return value;
   },
 };

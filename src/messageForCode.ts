@@ -1,7 +1,8 @@
 import { CRLF } from './constants';
-import { ResponseCode, responseNamesByCode } from './types';
+import { ResponseCode, responseNamesByCode, TypesByStringKey } from './types';
 import { invariant } from './invariant';
 import { camelcaseToSpaceCase } from './utils';
+import { Timecode } from './Timecode';
 
 // escape CR/LF and remove colons
 const sanitiseMessage = (input: string): string => {
@@ -11,7 +12,7 @@ const sanitiseMessage = (input: string): string => {
 /** For a given code, generate the response message that will be sent to the ATEM */
 export const messageForCode = (
   code: ResponseCode,
-  params?: Record<string, unknown> | string
+  params?: Record<string, TypesByStringKey[keyof TypesByStringKey]> | string
 ): string => {
   if (typeof params === 'string') {
     return code + ' ' + sanitiseMessage(params) + CRLF;
@@ -43,8 +44,15 @@ export const messageForCode = (
         valueString = value ? 'true' : 'false';
       } else if (typeof value === 'number') {
         valueString = value.toString();
+      } else if (value instanceof Timecode) {
+        valueString = value.toString();
       } else {
-        invariant(false, 'Unhandled value type: `%s`', typeof value);
+        invariant(
+          false,
+          'Unhandled value type for key `%s`: `%s`',
+          key,
+          Array.isArray(value) ? 'array' : typeof value
+        );
       }
 
       // convert camelCase keys to space-separated words

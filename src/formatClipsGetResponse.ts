@@ -1,8 +1,14 @@
-import * as ResponseInterface from './types/ResponseInterface';
+import { CommandResponsesByCommandName } from './api';
 
 export const formatClipsGetResponse = (
-  res: ResponseInterface.ClipsGet
+  res: CommandResponsesByCommandName['clips get']
 ): Record<string, string | number> => {
+  if (!res.clips) {
+    return {
+      clipsCount: 0,
+    };
+  }
+
   const clipsCount = res.clips.length;
 
   const response: Record<string, string | number> = {
