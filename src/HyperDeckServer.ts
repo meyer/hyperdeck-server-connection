@@ -14,6 +14,16 @@ const internalCommands = {
   ping: true,
 };
 
+interface FDListenOptions {
+  fd: number;
+}
+
+interface IPListenOptions {
+  ip: string;
+  /** Defaults to 9993 */
+  port?: number;
+}
+
 type SupportedCommands = Exclude<CommandName, keyof typeof internalCommands>;
 
 export class HyperDeckServer {
@@ -21,11 +31,12 @@ export class HyperDeckServer {
   private sockets: { [id: string]: HyperDeckSocket } = {};
   private server: Server;
 
-  constructor(ip?: string, logger = pino()) {
+  constructor(listenOpts: FDListenOptions | IPListenOptions, logger = pino()) {
     this.logger = logger.child({ name: 'HyperDeck Emulator' });
 
     this.server = createServer((socket) => {
-      this.logger.info('connection');
+      this.logger.info('connection', { address: this.server.address() });
+
       const socketId = Math.random().toString(35).substr(-6);
 
       const socketLogger = this.logger.child({ name: 'HyperDeck socket ' + socketId });
@@ -42,7 +53,13 @@ export class HyperDeckServer {
     this.server.on('close', () => this.logger.info('connection closed'));
     this.server.on('error', (err) => this.logger.error('server error:', err));
     this.server.maxConnections = 1;
-    this.server.listen(9993, ip);
+    if ('ip' in listenOpts) {
+      this.server.listen(listenOpts.port || 9993, listenOpts.ip);
+    } else if ('fd' in listenOpts) {
+      this.server.listen({ fd: listenOpts.fd });
+    } else {
+      invariant(false, 'Invalid listen options: `%o`', listenOpts);
+    }
   }
 
   close(): void {

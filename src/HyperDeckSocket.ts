@@ -59,7 +59,7 @@ export class HyperDeckSocket extends EventEmitter {
 
   private parser: MultilineParser;
   private lastReceivedMS = -1;
-  private watchdogTimer: NodeJS.Timer | null = null;
+  private watchdogTimer: NodeJS.Timeout | null = null;
 
   private notifySettings: Record<
     keyof DeserializedCommandsByName['notify']['parameters'],
@@ -87,11 +87,11 @@ export class HyperDeckSocket extends EventEmitter {
     for (const cmd of cmds) {
       // special cases
       if (cmd.name === 'watchdog') {
-        if (this.watchdogTimer) clearInterval(this.watchdogTimer);
+        if (this.watchdogTimer) global.clearInterval(this.watchdogTimer);
 
         const watchdogCmd = cmd as DeserializedCommandsByName['watchdog'];
         if (watchdogCmd.parameters.period) {
-          this.watchdogTimer = setInterval(() => {
+          this.watchdogTimer = global.setInterval(() => {
             if (Date.now() - this.lastReceivedMS > Number(watchdogCmd.parameters.period)) {
               this.socket.destroy();
               this.emit('disconnected');
