@@ -37,7 +37,7 @@ describe('HyperdeckServer', () => {
     const logger = getTestLogger();
 
     const server = await import('../HyperDeckServer');
-    const hyperdeck = new server.HyperDeckServer('0.0.0.0', logger.logger);
+    const hyperdeck = new server.HyperDeckServer({ ip: '0.0.0.0' }, logger.logger);
     const socketEntries = Object.entries(hyperdeck['sockets']);
     expect(socketEntries.length).toBe(1);
     const hyperdeckSocket = socketEntries[0][1];

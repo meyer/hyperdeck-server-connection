@@ -35,7 +35,7 @@ export class HyperDeckServer {
     this.logger = logger.child({ name: 'HyperDeck Emulator' });
 
     this.server = createServer((socket) => {
-      this.logger.info('connection', { address: this.server.address() });
+      this.logger.info('connection');
 
       const socketId = Math.random().toString(35).substr(-6);
 
@@ -49,7 +49,9 @@ export class HyperDeckServer {
       });
     });
 
-    this.server.on('listening', () => this.logger.info('listening'));
+    this.server.on('listening', () => {
+      this.logger.info('listening', { address: this.server.address() });
+    });
     this.server.on('close', () => this.logger.info('connection closed'));
     this.server.on('error', (err) => this.logger.error('server error:', err));
     this.server.maxConnections = 1;
